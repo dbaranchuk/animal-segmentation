@@ -103,7 +103,7 @@ class TinyResNet:
     def set_update(self):
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
-            0: 0.0001
+            0: 0.0001,
             10: 0.00001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
