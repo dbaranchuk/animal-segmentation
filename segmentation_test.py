@@ -5,7 +5,7 @@ import time
 from skimage.io import imread, imsave
 from segmentation import train_unary_model, segmentation
 
-TRAIN_SIZE = 50
+TRAIN_SIZE = 20
 
 def load_data(path):
     if path[-1] != '/':
