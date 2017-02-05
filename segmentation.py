@@ -16,7 +16,7 @@ from lasagne.updates import nesterov_momentum
 
 INPUT_SHAPE = (None, 3, 11, 11)
 PAD = 5
-TRAIN_SIZE = 15 #40
+TRAIN_SIZE = 10 #40
 VAL_SIZE = 5 #10
 NUM_EPOCHS = 15
 
@@ -72,7 +72,7 @@ class TinyResNet:
             for i in range(h):
                 for j in range(w):
                     im_x, im_y = (i+PAD, j+PAD)
-                    block = image[:, im_x-PAD:im_x+PAD+1, im_y-PAD:im_y+PAD+1]
+                    block = image[:, im_x-PAD:im_x+PAD + 1, im_y-PAD:im_y+PAD + 1]
                     if n < TRAIN_SIZE:
                         self.X_train.append(block)
                         self.y_train.append(gt[i,j])
@@ -103,7 +103,8 @@ class TinyResNet:
     def set_update(self):
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
-            0: 0.0001,
+            0: 0.001,
+            5: 0.0001,
             10: 0.00001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
@@ -153,7 +154,7 @@ def pad_images(images):
     new_images = []
     for image in images:
         h, w, c = image.shape
-        new_image = np.zeros((h+2*PAD, w+2*PAD, c))
+        new_image = np.zeros((h + 2*PAD, w + 2*PAD, c))
         for i in range(image.shape[2]):
             new_image[...,i] = np.lib.pad(image[...,i], (5,5), 'reflect')
         new_images.append(new_image)
@@ -163,6 +164,8 @@ def pad_images(images):
 # Main training function
 def train_unary_model(images, gts):
     print(gts[0].shape)
+    # Remain 15 images for traning/validation
+    images = images[:TRAIN_SIZE + VAL_SIZE]
     images = pad_images(images)
     # From TF to TH order
     images = images.transpose(0,3,1,2)
