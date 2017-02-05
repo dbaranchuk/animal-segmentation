@@ -66,7 +66,7 @@ class TinyResNet:
     def set_data(self, images, gts):
         self.X_train, self.y_train = ([],[])
         self.X_val, self.y_val = ([],[])
-        for n in range(TRAIN_SIZE + VAL_SIZE):
+        for n in range(len(images)):
             image, gt = (images[n], gts[n])
             h, w = gts[n].shape
             for i in range(h):
@@ -154,7 +154,7 @@ def pad_images(images):
     new_images = []
     for image in images:
         h, w, c = image.shape
-        new_image = np.zeros((h+2*PAD, w+2*PAD, c))
+        new_image = np.zeros((h + 2*PAD, w + 2*PAD, c))
         for i in range(image.shape[2]):
             new_image[...,i] = np.lib.pad(image[...,i], (5,5), 'reflect')
         new_images.append(new_image)
@@ -164,6 +164,8 @@ def pad_images(images):
 # Main training function
 def train_unary_model(images, gts):
     print(gts[0].shape)
+    # Remain 15 images for traning/validation
+    images = images[:TRAIN_SIZE + VAL_SIZE]
     images = pad_images(images)
     # From TF to TH order
     images = images.transpose(0,3,1,2)
