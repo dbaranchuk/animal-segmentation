@@ -125,7 +125,7 @@ class TinyResNet:
             train_batches = 0
             start_time = time.time()
             for batch in iterate_minibatches(self.X_train, self.y_train,
-                                             256, shuffle=True):
+                                             512, shuffle=True):
                 inputs, targets = batch
                 train_err += train_fn(inputs, targets)
                 train_batches += 1
@@ -134,7 +134,7 @@ class TinyResNet:
             val_acc = 0
             val_batches = 0
             for batch in iterate_minibatches(self.X_val, self.y_val,
-                                             256, shuffle=False):
+                                             512, shuffle=False):
                 inputs, targets = batch
                 err, acc = val_fn(inputs, targets)
                 val_err += err
