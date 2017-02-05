@@ -16,7 +16,7 @@ from lasagne.updates import nesterov_momentum
 
 INPUT_SHAPE = (None, 3, 11, 11)
 PAD = 5
-TRAIN_SIZE = 15 #40
+TRAIN_SIZE = 10 #40
 VAL_SIZE = 5 #10
 NUM_EPOCHS = 15
 
@@ -66,13 +66,13 @@ class TinyResNet:
     def set_data(self, images, gts):
         self.X_train, self.y_train = ([],[])
         self.X_val, self.y_val = ([],[])
-        for n in range(len(images)):
+        for n in range(TRAIN_SIZE + VAL_SIZE):
             image, gt = (images[n], gts[n])
             h, w = gts[n].shape
             for i in range(h):
                 for j in range(w):
                     im_x, im_y = (i+PAD, j+PAD)
-                    block = image[:, im_x-PAD:im_x+PAD+1, im_y-PAD:im_y+PAD+1]
+                    block = image[:, im_x-PAD:im_x+PAD + 1, im_y-PAD:im_y+PAD + 1]
                     if n < TRAIN_SIZE:
                         self.X_train.append(block)
                         self.y_train.append(gt[i,j])
@@ -103,7 +103,8 @@ class TinyResNet:
     def set_update(self):
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
-            0: 0.0001,
+            0: 0.001,
+            5: 0.0001,
             10: 0.00001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
