@@ -18,7 +18,7 @@ INPUT_SHAPE = (None, 3, 11, 11)
 PAD = 5
 TRAIN_SIZE = 15 #40
 VAL_SIZE = 5 #10
-NUM_EPOCHS = 100
+NUM_EPOCHS = 15
 
 
 # Bottleneck
@@ -103,10 +103,8 @@ class TinyResNet:
     def set_update(self):
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
-            0: 0.0001,
-            2: 0.01,
-            20: 0.001,
-            50: 0.0001
+            0: 0.0001
+            10: 0.00001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
         self.updates = nesterov_momentum(self.train_loss, params,
@@ -127,7 +125,7 @@ class TinyResNet:
             train_batches = 0
             start_time = time.time()
             for batch in iterate_minibatches(self.X_train, self.y_train,
-                                             256, shuffle=True):
+                                             512, shuffle=True):
                 inputs, targets = batch
                 train_err += train_fn(inputs, targets)
                 train_batches += 1
@@ -136,7 +134,7 @@ class TinyResNet:
             val_acc = 0
             val_batches = 0
             for batch in iterate_minibatches(self.X_val, self.y_val,
-                                             256, shuffle=False):
+                                             512, shuffle=False):
                 inputs, targets = batch
                 err, acc = val_fn(inputs, targets)
                 val_err += err
