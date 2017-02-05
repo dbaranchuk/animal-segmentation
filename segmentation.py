@@ -104,8 +104,7 @@ class TinyResNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.001,
-            5: 0.0001,
-            10: 0.00001
+            7: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
         self.updates = nesterov_momentum(self.train_loss, params,
