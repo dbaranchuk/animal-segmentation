@@ -7,8 +7,8 @@ import theano.tensor as T
 from skimage.util import pad
 
 from lasagne.layers import InputLayer, Conv2DLayer, DenseLayer, \
-                          ElemwiseSumLayer, MaxPool2DLayer,    \
-                          get_output, get_all_params
+                          ElemwiseSumLayer, MaxPool2DLayer,     \
+                          get_output, get_all_params, BatchNormLayer
 from lasagne.init import HeNormal
 from lasagne.nonlinearities import rectify, softmax
 from lasagne.objectives import categorical_crossentropy
@@ -25,10 +25,15 @@ NUM_EPOCHS = 15
 def residual_block(layer, num_filters):
     l_conv1 = Conv2DLayer(layer, num_filters/4, filter_size=1, pad='same',
                         nonlinearity=rectify, W=HeNormal())
+    l_conv1 = BatchNormLayer(l_conv1)
+
     l_conv2 = Conv2DLayer(l_conv1, num_filters/4, filter_size=3, pad='same',
                         nonlinearity=rectify, W=HeNormal())
+    l_conv2 = BatchNormLayer(l_conv2)
+
     l_conv3 = Conv2DLayer(l_conv2, num_filters, filter_size=1, pad='same',
                         nonlinearity=rectify, W=HeNormal())
+    l_conv3 = BatchNormLayer(l_conv3)
     return ElemwiseSumLayer([l_conv3, layer])
 
 
@@ -50,15 +55,21 @@ class TinyResNet:
     def __init__(self):
         self.input_var = T.tensor4('inputs')
         self.target_var = T.ivector('targets')
-
+        # Input Layer
         l_in = InputLayer(INPUT_SHAPE, input_var=self.input_var)
+        # Conv1
         l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=3,
                             nonlinearity=rectify, W=HeNormal())
+        l_conv1 = BatchNormLayer(l_conv1)
+        # Conv2
         l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=2, stride=2,
                             nonlinearity=rectify, W=HeNormal())
+        l_conv2 = BatchNormLayer(l_conv2)
+        # Residual Block
         l_res = residual_block(l_conv2, 64)
         l_max = MaxPool2DLayer(l_res, pool_size=(2, 2))
         l_dense = DenseLayer(l_max, num_units=512, nonlinearity=rectify)
+        # Softmax Output
         l_out = DenseLayer(l_dense, num_units=2, nonlinearity=softmax)
         self.model = l_out
 
