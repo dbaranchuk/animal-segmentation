@@ -15,7 +15,7 @@ from lasagne.objectives import categorical_crossentropy
 from lasagne.updates import nesterov_momentum
 
 PAD = 6
-TRAIN_SIZE = 25 #40
+TRAIN_SIZE = 30 #40
 VAL_SIZE = 5 #10
 NUM_EPOCHS = 20
 INPUT_SHAPE = (None, 3, 2*PAD + 1, 2*PAD + 1)
