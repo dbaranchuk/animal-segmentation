@@ -114,7 +114,7 @@ class TinyResNet:
     def set_update(self):
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
-            5: 0.01,
+            0: 0.01,
             5: 0.001,
             15: 0.0001
         }
