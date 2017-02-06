@@ -87,17 +87,15 @@ class TinyNet:
         # Input Layer
         l_in = InputLayer(INPUT_SHAPE, input_var=self.input_var)
         # Conv1
-        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=3,
+        l_conv1 = Conv2DLayer(l_in, num_filters=NUM_FILTERS1, filter_size=3,
                             nonlinearity=rectify, W=HeNormal())
         l_conv1 = batch_norm(l_conv1)
         # Conv2
-        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=2, stride=2,
+        l_conv2 = Conv2DLayer(l_conv1, num_filters=NUM_FILTERS2, filter_size=2, stride=2,
                             nonlinearity=rectify, W=HeNormal())
         l_conv2 = batch_norm(l_conv2)
-        # Residual Block
-        #l_res = residual_block(l_conv2, 64)
         l_max = MaxPool2DLayer(l_conv2, pool_size=(2, 2))
-        l_dense = DenseLayer(l_max, num_units=256, nonlinearity=rectify)
+        l_dense = DenseLayer(l_max, num_units=NUM_FILTERS3, nonlinearity=rectify)
         # Softmax Output
         l_out = DenseLayer(l_dense, num_units=2, nonlinearity=softmax)
         self.model = l_out
@@ -166,7 +164,7 @@ class TinyNet:
             train_batches = 0
             start_time = time.time()
             for batch in iterate_minibatches(self.X_train, self.y_train,
-                                             9128, shuffle=True):
+                                             BATCH_SIZE, shuffle=True):
                 inputs, targets = batch
                 train_err += train_fn(inputs, targets)
                 train_batches += 1
@@ -175,7 +173,7 @@ class TinyNet:
             val_acc = 0
             val_batches = 0
             for batch in iterate_minibatches(self.X_val, self.y_val,
-                                             4098, shuffle=False):
+                                             BATCH_SIZE, shuffle=False):
                 inputs, targets = batch
                 err, acc = val_fn(inputs, targets)
                 val_err += err
