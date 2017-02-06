@@ -195,20 +195,14 @@ def train_unary_model(images, gts):
         # From TF to TH order
         images = images.transpose(0,3,1,2)
         for train_size in range(5, MAX_TRAIN_SIZE, 5):
-            TRAIN_SIZE = train_size
             for num_filters1 in NUM_FILTERS1_SET:
-                NUM_FILTERS1 = num_filters1
                 for num_filters2 in NUM_FILTERS2_SET:
-                    NUM_FILTERS2 = num_filters2
                     for num_filters3 in NUM_FILTERS3_SET:
-                        NUM_FILTERS3 = num_filters3
                         for num_epochs in range(10, MAX_NUM_EPOCHS, 5):
-                            NUM_EPOCHS = num_epochs
                             for batch_size in BATCH_SIZE_SET:
-                                BATCH_SIZE = batch_size
                                 # TRAIN
-                                model = TinyNet(PAD, TRAIN_SIZE,NUM_EPOCHS, NUM_FILTERS1,
-                                                NUM_FILTERS2, NUM_FILTERS3, BATCH_SIZE)
+                                model = TinyNet(pad, train_size, num_epochs, num_filters1,
+                                                num_filters2, num_filters2, batch_size)
                                 model.print_params()
                                 model.build_cnn()
                                 model.set_data(images, gts)
