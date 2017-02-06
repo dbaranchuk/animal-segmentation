@@ -210,6 +210,7 @@ def train_unary_model(images, gts):
                                 model = TinyNet(PAD, TRAIN_SIZE,NUM_EPOCHS, NUM_FILTERS1,
                                                 NUM_FILTERS2, NUM_FILTERS3, BATCH_SIZE)
                                 model.print_params()
+                                model.build_cnn()
                                 model.set_data(images, gts)
                                 model.set_train_loss()
                                 model.set_test_loss()
