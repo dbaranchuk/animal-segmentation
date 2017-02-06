@@ -119,7 +119,7 @@ class TinyNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
-            2: 0.001,
+            5: 0.001,
             self.num_epochs-5: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
@@ -200,7 +200,7 @@ def train_unary_model(images, gts):
                 num_filters1 = NUM_FILTERS1_SET[ind]
                 num_filters2 = NUM_FILTERS2_SET[ind]
                 for num_filters3 in NUM_FILTERS3_SET:
-                    for num_epochs in range(25, MAX_NUM_EPOCHS, 5):
+                    for num_epochs in range(30, MAX_NUM_EPOCHS, 5):
                         # TRAIN
                         model = TinyNet(pad, train_size, num_epochs, num_filters1,
                                         num_filters2, num_filters3, batch_size)
