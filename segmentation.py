@@ -189,27 +189,27 @@ def pad_images(images, PAD):
 
 # WORKER
 def train_unary_model(images, gts):
-    for pad in range(4,7,1):
-        images = pad_images(images, pad)
-        # From TF to TH order
-        images = images.transpose(0,3,1,2)
-        train_size = 10 * (pad - 2)
-        for batch_size in BATCH_SIZE_SET[:train_size/10 + 1]:
-            for ind in range(3):
-                num_filters1 = NUM_FILTERS1_SET[ind]
-                num_filters2 = NUM_FILTERS2_SET[ind]
-                for num_filters3 in NUM_FILTERS3_SET:
-                    for num_epochs in range(30, MAX_NUM_EPOCHS, 10):
-                        # TRAIN
-                        model = TinyNet(pad, train_size, num_epochs, num_filters1,
-                                        num_filters2, num_filters3, batch_size)
-                        model.print_params()
-                        model.build_cnn()
-                        model.set_data(images, gts)
-                        model.set_train_loss()
-                        model.set_test_loss()
-                        model.set_update()
-                        model.train()
+    pad = 5
+    images = pad_images(images, pad)
+    # From TF to TH order
+    images = images.transpose(0,3,1,2)
+    train_size = 10 * (pad - 2)
+    for batch_size in BATCH_SIZE_SET[:train_size/10 + 1]:
+        for ind in range(3):
+            num_filters1 = NUM_FILTERS1_SET[ind]
+            num_filters2 = NUM_FILTERS2_SET[ind]
+            for num_filters3 in NUM_FILTERS3_SET:
+                for num_epochs in range(30, MAX_NUM_EPOCHS, 10):
+                    # TRAIN
+                    model = TinyNet(pad, train_size, num_epochs, num_filters1,
+                                    num_filters2, num_filters3, batch_size)
+                    model.print_params()
+                    model.build_cnn()
+                    model.set_data(images, gts)
+                    model.set_train_loss()
+                    model.set_test_loss()
+                    model.set_update()
+                    model.train()
     return {}
 
 # Main training function
