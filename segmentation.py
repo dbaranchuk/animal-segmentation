@@ -14,12 +14,11 @@ from lasagne.nonlinearities import rectify, softmax
 from lasagne.objectives import categorical_crossentropy
 from lasagne.updates import nesterov_momentum
 
-INPUT_SHAPE = (None, 3, 11, 11)
-PAD = 5
+PAD = 6
 TRAIN_SIZE = 15 #40
 VAL_SIZE = 5 #10
 NUM_EPOCHS = 20
-
+INPUT_SHAPE = (None, 3, 13, 13)
 
 # Bottleneck
 def residual_block(layer, num_filters):
