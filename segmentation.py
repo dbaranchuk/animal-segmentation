@@ -20,7 +20,7 @@ MAX_TRAIN_SIZE = 41
 MAX_NUM_EPOCHS = 41
 
 # num filters sets for every layers
-NUM_FILTERS1_SET = (16, 32)
+NUM_FILTERS1_SET = (16, 16, 32)
 NUM_FILTERS2_SET = (16, 32, 64)
 NUM_FILTERS3_SET = (64, 128, 256)
 
@@ -194,22 +194,23 @@ def train_unary_model(images, gts):
         images = pad_images(images, pad)
         # From TF to TH order
         images = images.transpose(0,3,1,2)
-        for train_size in range(5, MAX_TRAIN_SIZE, 5):
+        for train_size in range(10, MAX_TRAIN_SIZE, 5):
             batch_size = BATCH_SIZE_SET[train_size/5 - 1]
-            for num_filters1 in NUM_FILTERS1_SET:
-                for num_filters2 in NUM_FILTERS2_SET:
-                    for num_filters3 in NUM_FILTERS3_SET:
-                        for num_epochs in range(15, MAX_NUM_EPOCHS, 5):
-                            # TRAIN
-                            model = TinyNet(pad, train_size, num_epochs, num_filters1,
-                                            num_filters2, num_filters2, batch_size)
-                            model.print_params()
-                            model.build_cnn()
-                            model.set_data(images, gts)
-                            model.set_train_loss()
-                            model.set_test_loss()
-                            model.set_update()
-                            model.train()
+            for ind in range(3):
+                num_filters1 = NUM_FILTERS1_SET[ind]
+                num_filters2 = NUM_FILTERS2_SET[ind]
+                for num_filters3 in NUM_FILTERS3_SET:
+                    for num_epochs in range(15, MAX_NUM_EPOCHS, 5):
+                        # TRAIN
+                        model = TinyNet(pad, train_size, num_epochs, num_filters1,
+                                        num_filters2, num_filters3, batch_size)
+                        model.print_params()
+                        model.build_cnn()
+                        model.set_data(images, gts)
+                        model.set_train_loss()
+                        model.set_test_loss()
+                        model.set_update()
+                        model.train()
     return {}
 
 # Main training function
