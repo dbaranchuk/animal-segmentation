@@ -14,7 +14,7 @@ from lasagne.nonlinearities import rectify, softmax
 from lasagne.objectives import categorical_crossentropy
 from lasagne.updates import nesterov_momentum
 
-PAD = 3
+PAD = 4
 TRAIN_SIZE = 15 #40
 VAL_SIZE = 5 #10
 NUM_EPOCHS = 20
