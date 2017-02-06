@@ -58,17 +58,17 @@ class TinyResNet:
         # Input Layer
         l_in = InputLayer(INPUT_SHAPE, input_var=self.input_var)
         # Conv1
-        l_conv1 = Conv2DLayer(l_in, num_filters=16, filter_size=3,
+        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=3,
                             nonlinearity=rectify, W=HeNormal())
         l_conv1 = batch_norm(l_conv1)
         # Conv2
-        l_conv2 = Conv2DLayer(l_conv1, num_filters=32, filter_size=2, stride=2,
+        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=2, stride=2,
                             nonlinearity=rectify, W=HeNormal())
         l_conv2 = batch_norm(l_conv2)
         # Residual Block
         #l_res = residual_block(l_conv2, 64)
         l_max = MaxPool2DLayer(l_conv2, pool_size=(2, 2))
-        l_dense = DenseLayer(l_max, num_units=64, nonlinearity=rectify)
+        l_dense = DenseLayer(l_max, num_units=128, nonlinearity=rectify)
         # Softmax Output
         l_out = DenseLayer(l_dense, num_units=2, nonlinearity=softmax)
         self.model = l_out
