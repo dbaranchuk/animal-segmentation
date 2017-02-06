@@ -163,7 +163,7 @@ class TinyNet:
             print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
             print("  validation accuracy:\t\t{:.2f} %".format(val_acc / val_batches * 100))
 
-    def print_params():
+    def print_params(self):
         print
         print ('='*50)
         print ('PAD = %d' % self.pad)
