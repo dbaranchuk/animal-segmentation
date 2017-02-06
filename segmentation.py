@@ -55,7 +55,7 @@ class TinyNet:
         self.input_shape = (None, 3, 2*PAD + 1, 2*PAD + 1)
         self.input_var = T.tensor4('inputs')
         self.target_var = T.ivector('targets')
-
+    
     # Build Net
     def build_cnn(self):
         # Input Layer
@@ -119,7 +119,7 @@ class TinyNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
-            20: 0.001,
+            num_epochs//2: 0.001,
             #self.num_epochs-5: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
@@ -200,7 +200,7 @@ def train_unary_model(images, gts):
                 num_filters1 = NUM_FILTERS1_SET[ind]
                 num_filters2 = NUM_FILTERS2_SET[ind]
                 for num_filters3 in NUM_FILTERS3_SET:
-                    for num_epochs in range(35, MAX_NUM_EPOCHS, 5):
+                    for num_epochs in range(30, MAX_NUM_EPOCHS, 5):
                         # TRAIN
                         model = TinyNet(pad, train_size, num_epochs, num_filters1,
                                         num_filters2, num_filters3, batch_size)
