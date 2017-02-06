@@ -15,10 +15,40 @@ from lasagne.objectives import categorical_crossentropy
 from lasagne.updates import nesterov_momentum
 
 PAD = 6
-TRAIN_SIZE = 30 #40
+TRAIN_SIZE = 25 #40
 VAL_SIZE = 5 #10
 NUM_EPOCHS = 20
 INPUT_SHAPE = (None, 3, 2*PAD + 1, 2*PAD + 1)
+NUM_FILTERS1 = 16
+NUM_FILTERS2 = 16
+NUM_FILTERS3 = 64
+BATCH_SIZE = 9128
+
+# Worker
+MAX_TRAIN_SIZE = 41
+MAX_NUM_EPOCHS = 31
+
+# num filters sets for every layers
+NUM_FILTERS1_SET = (16, 32)
+NUM_FILTERS2_SET = (16, 32, 64)
+NUM_FILTERS3_SET = (64, 128, 256)
+
+BATCH_SIZE_SET = (2048, 4096, 9128, 13224, 16256)
+
+def print_params():
+    print ()
+    print ('='*50)
+    print ('PAD = %d' % PAD)
+    print ('TRAIN_SIZE = %d' % TRAIN_SIZE)
+    print ('NUM_FILTERS1 = %d' % NUM_FILTERS1)
+    print ('NUM_FILTERS2 = %d' % NUM_FILTERS2)
+    print ('NUM_FILTERS3 = %d' % NUM_FILTERS3)
+    print ('NUM_EPOCHS = %d' % NUM_EPOCHS)
+    print ('BATCH_SIZE = %d' % BATCH_SIZE)
+    print ('='*50)
+    print ()
+
+
 
 # Bottleneck
 def residual_block(layer, num_filters):
@@ -49,7 +79,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
         yield inputs[excerpt], targets[excerpt]
 
 # Net for unary terms
-class TinyResNet:
+class TinyNet:
     # Build Net
     def __init__(self):
         self.input_var = T.tensor4('inputs')
@@ -115,7 +145,7 @@ class TinyResNet:
         self.lr_schedule = {
             #0: 0.01,
             0: 0.001,
-            15: 0.0001
+            NUM_EPOCHS-5: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
         self.updates = nesterov_momentum(self.train_loss, params,
@@ -170,23 +200,49 @@ def pad_images(images):
         new_images.append(new_image)
     return np.array(new_images)
 
+# WORKER
+def train_unary_model(images, gts):
+    for pad in range(3,7,1):
+        PAD = pad
+        INPUT_SHAPE = (None, 3, 2*PAD + 1, 2*PAD + 1)
+        images = pad_images(images)
+        # From TF to TH order
+        images = images.transpose(0,3,1,2)
+        for train_size in range(5, MAX_TRAIN_SIZE, 5):
+            TRAIN_SIZE = train_size
+            for num_filters1 in NUM_FILTERS1_SET:
+                NUM_FILTERS1 = num_filters1
+                for num_filters2 in NUM_FILTERS2_SET:
+                    NUM_FILTERS2 = num_filters2
+                    for num_filters3 in NUM_FILTERS3_SET:
+                        NUM_FILTERS3 = num_filters3
+                        for num_epochs in range(10, MAX_NUM_EPOCHS, 5):
+                            NUM_EPOCHS = num_epochs
+                            for batch_size in BATCH_SIZE_SET:
+                                BATCH_SIZE = batch_size
+                                # TRAIN
+                                model = TinyNet()
+                                model.set_data(images, gts)
+                                model.set_train_loss()
+                                model.set_test_loss()
+                                model.set_update()
+                                model.train()
+                                print_params()
+    return {}
 
 # Main training function
-def train_unary_model(images, gts):
-    print(gts[0].shape)
-    # Remain 15 images for traning/validation
-    images = images[:TRAIN_SIZE + VAL_SIZE]
-    images = pad_images(images)
+#def train_unary_model(images, gts):
+#    images = pad_images(images)
     # From TF to TH order
-    images = images.transpose(0,3,1,2)
+#    images = images.transpose(0,3,1,2)
 
-    model = TinyResNet()
-    model.set_data(images, gts)
-    model.set_train_loss()
-    model.set_test_loss()
-    model.set_update()
-    model.train()
-    return {}
+#    model = TinyNet()
+#    model.set_data(images, gts)
+#    model.set_train_loss()
+#    model.set_test_loss()
+#    model.set_update()
+#    model.train()
+#    return {}
 
 
 def segmentation(unary_model, images):
