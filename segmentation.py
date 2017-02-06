@@ -24,7 +24,7 @@ NUM_FILTERS1_SET = (16, 16, 32)
 NUM_FILTERS2_SET = (16, 32, 64)
 NUM_FILTERS3_SET = (64, 128, 256)
 
-BATCH_SIZE_SET = (2048, 4096, 6144, 8192, 10240, 12288, 14336, 16384)
+BATCH_SIZE_SET = (4096, 8192, 12288, 16384)
 
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
@@ -194,13 +194,13 @@ def train_unary_model(images, gts):
         images = pad_images(images, pad)
         # From TF to TH order
         images = images.transpose(0,3,1,2)
-        for train_size in range(10, MAX_TRAIN_SIZE, 5):
-            batch_size = BATCH_SIZE_SET[train_size/5 - 1]
+        train_size = 10 * (pad - 2)
+        for batch_size in BATCH_SIZE_SET[:train_size/10 + 1]:
             for ind in range(3):
                 num_filters1 = NUM_FILTERS1_SET[ind]
                 num_filters2 = NUM_FILTERS2_SET[ind]
                 for num_filters3 in NUM_FILTERS3_SET:
-                    for num_epochs in range(30, MAX_NUM_EPOCHS, 5):
+                    for num_epochs in range(30, MAX_NUM_EPOCHS, 10):
                         # TRAIN
                         model = TinyNet(pad, train_size, num_epochs, num_filters1,
                                         num_filters2, num_filters3, batch_size)
@@ -227,6 +227,15 @@ def train_unary_model(images, gts):
 #    model.train()
 #    return {}
 
+A = 1.
+B = 1.
+sigma = 1.
+def potts_model():
+    delta = img[i, j]
+
+def min_cut(image):
+    graph = maxflow.Graph[float]()
+    graph.add_grid_nodes(image.shape)
 
 def segmentation(unary_model, images):
     return [np.zeros(img.shape[:2]) for img in images]
