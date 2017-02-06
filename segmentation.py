@@ -17,7 +17,7 @@ from lasagne.updates import nesterov_momentum
 
 # Worker
 MAX_TRAIN_SIZE = 41
-MAX_NUM_EPOCHS = 36
+MAX_NUM_EPOCHS = 41
 
 # num filters sets for every layers
 NUM_FILTERS1_SET = (16, 32)
