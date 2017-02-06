@@ -195,7 +195,7 @@ def train_unary_model(images, gts):
         # From TF to TH order
         images = images.transpose(0,3,1,2)
         for train_size in range(5, MAX_TRAIN_SIZE, 5):
-            batch_size = BATCH_SIZE_SET(train_size/5 - 1)
+            batch_size = BATCH_SIZE_SET[train_size/5 - 1]
             for num_filters1 in NUM_FILTERS1_SET:
                 for num_filters2 in NUM_FILTERS2_SET:
                     for num_filters3 in NUM_FILTERS3_SET:
