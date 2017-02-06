@@ -219,13 +219,13 @@ def train_unary_model(images, gts):
                             for batch_size in BATCH_SIZE_SET:
                                 BATCH_SIZE = batch_size
                                 # TRAIN
+                                print_params()
                                 model = TinyNet()
                                 model.set_data(images, gts)
                                 model.set_train_loss()
                                 model.set_test_loss()
                                 model.set_update()
                                 model.train()
-                                print_params()
     return {}
 
 # Main training function
