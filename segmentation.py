@@ -16,8 +16,8 @@ from lasagne.updates import nesterov_momentum
 
 INPUT_SHAPE = (None, 3, 11, 11)
 PAD = 5
-TRAIN_SIZE = 10 #40
-VAL_SIZE = 5 #10
+TRAIN_SIZE = 15 #40
+VAL_SIZE = 10 #10
 NUM_EPOCHS = 15
 
 
@@ -136,7 +136,7 @@ class TinyResNet:
             train_batches = 0
             start_time = time.time()
             for batch in iterate_minibatches(self.X_train, self.y_train,
-                                             2048, shuffle=True):
+                                             4096, shuffle=True):
                 inputs, targets = batch
                 train_err += train_fn(inputs, targets)
                 train_batches += 1
@@ -145,7 +145,7 @@ class TinyResNet:
             val_acc = 0
             val_batches = 0
             for batch in iterate_minibatches(self.X_val, self.y_val,
-                                             2048, shuffle=False):
+                                             4096, shuffle=False):
                 inputs, targets = batch
                 err, acc = val_fn(inputs, targets)
                 val_err += err
