@@ -145,7 +145,7 @@ class TinyResNet:
             val_acc = 0
             val_batches = 0
             for batch in iterate_minibatches(self.X_val, self.y_val,
-                                             4096, shuffle=False):
+                                             2048, shuffle=False):
                 inputs, targets = batch
                 err, acc = val_fn(inputs, targets)
                 val_err += err
