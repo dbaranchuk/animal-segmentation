@@ -17,7 +17,7 @@ from lasagne.updates import nesterov_momentum
 
 # Worker
 MAX_TRAIN_SIZE = 41
-MAX_NUM_EPOCHS = 46
+MAX_NUM_EPOCHS = 51
 
 # num filters sets for every layers
 NUM_FILTERS1_SET = (16, 16, 32)
@@ -119,7 +119,7 @@ class TinyNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
-            5: 0.001,
+            10: 0.001,
             self.num_epochs-5: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
