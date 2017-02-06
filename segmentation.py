@@ -17,7 +17,7 @@ from lasagne.updates import nesterov_momentum
 
 # Worker
 MAX_TRAIN_SIZE = 41
-MAX_NUM_EPOCHS = 41
+MAX_NUM_EPOCHS = 46
 
 # num filters sets for every layers
 NUM_FILTERS1_SET = (16, 16, 32)
@@ -200,7 +200,7 @@ def train_unary_model(images, gts):
                 num_filters1 = NUM_FILTERS1_SET[ind]
                 num_filters2 = NUM_FILTERS2_SET[ind]
                 for num_filters3 in NUM_FILTERS3_SET:
-                    for num_epochs in range(15, MAX_NUM_EPOCHS, 5):
+                    for num_epochs in range(25, MAX_NUM_EPOCHS, 5):
                         # TRAIN
                         model = TinyNet(pad, train_size, num_epochs, num_filters1,
                                         num_filters2, num_filters3, batch_size)
