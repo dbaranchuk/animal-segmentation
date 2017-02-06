@@ -166,7 +166,7 @@ def pad_images(images):
         h, w, c = image.shape
         new_image = np.zeros((h + 2*PAD, w + 2*PAD, c))
         for i in range(image.shape[2]):
-            new_image[...,i] = np.lib.pad(image[...,i], (5,5), 'reflect')
+            new_image[...,i] = np.lib.pad(image[...,i], (PAD,PAD), 'reflect')
         new_images.append(new_image)
     return np.array(new_images)
 
