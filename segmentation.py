@@ -66,7 +66,7 @@ class TinyResNet:
                             nonlinearity=rectify, W=HeNormal())
         l_conv2 = batch_norm(l_conv2)
         # Residual Block
-        l_res = residual_block(l_conv2, 64)
+        #l_res = residual_block(l_conv2, 64)
         l_max = MaxPool2DLayer(l_res, pool_size=(2, 2))
         l_dense = DenseLayer(l_max, num_units=256, nonlinearity=rectify)
         # Softmax Output
