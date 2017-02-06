@@ -189,7 +189,7 @@ def pad_images(images, PAD):
 
 # WORKER
 def train_unary_model(images, gts):
-    for pad in range(3,7,1):
+    for pad in range(4,7,1):
         images = pad_images(images, pad)
         # From TF to TH order
         images = images.transpose(0,3,1,2)
