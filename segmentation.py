@@ -14,8 +14,8 @@ from lasagne.nonlinearities import rectify, softmax
 from lasagne.objectives import categorical_crossentropy
 from lasagne.updates import nesterov_momentum
 
-PAD = 4
-TRAIN_SIZE = 15 #40
+PAD = 6
+TRAIN_SIZE = 25 #40
 VAL_SIZE = 5 #10
 NUM_EPOCHS = 20
 INPUT_SHAPE = (None, 3, 2*PAD + 1, 2*PAD + 1)
@@ -136,7 +136,7 @@ class TinyResNet:
             train_batches = 0
             start_time = time.time()
             for batch in iterate_minibatches(self.X_train, self.y_train,
-                                             4096, shuffle=True):
+                                             9128, shuffle=True):
                 inputs, targets = batch
                 train_err += train_fn(inputs, targets)
                 train_batches += 1
@@ -145,7 +145,7 @@ class TinyResNet:
             val_acc = 0
             val_batches = 0
             for batch in iterate_minibatches(self.X_val, self.y_val,
-                                             4096, shuffle=False):
+                                             4098, shuffle=False):
                 inputs, targets = batch
                 err, acc = val_fn(inputs, targets)
                 val_err += err
