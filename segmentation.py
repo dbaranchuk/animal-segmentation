@@ -87,7 +87,7 @@ class TinyResNet:
                     if n < TRAIN_SIZE:
                         self.X_train.append(block)
                         self.y_train.append(gt[i,j])
-                    else:
+                    elif n >= len(images)-VAL_SIZE:
                         self.X_val.append(block)
                         self.y_val.append(gt[i,j])
         self.X_train = np.array(self.X_train).astype(np.float32)
