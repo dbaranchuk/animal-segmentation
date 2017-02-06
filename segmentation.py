@@ -118,8 +118,8 @@ class TinyNet:
     def set_update(self):
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
-            #0: 0.01,
-            0: 0.001,
+            0: 0.01,
+            2: 0.001,
             self.num_epochs-5: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
