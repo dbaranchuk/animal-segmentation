@@ -25,10 +25,10 @@ NUM_FILTERS2 = 32
 NUM_FILTERS3 = 256
 
 PAD = 5
-BATCH_SIZE = 32768 #16384 #(8192, 12288, 16384)
+BATCH_SIZE = (2048, 4098, 8192, 16384)
 TRAIN_SIZE = 45
 VAL_SIZE = 5
-NUM_EPOCHS = 100
+NUM_EPOCHS = 50
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
@@ -44,7 +44,8 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 
 
 def get_image_blocks(image, gt=None):
-    h, w = gt.shape
+    h = image.shape[1] - 2*PAD
+    w = image.shape[2] - 2*PAD
     blocks = []
     bg_blocks = []
     obj_blocks = []
@@ -151,7 +152,7 @@ class TinyNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
-            40: 0.001,
+            int(NUM_EPOCHS*0.4): 0.001,
             #NUM_EPOCHS-5: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
@@ -159,7 +160,7 @@ class TinyNet:
                                          learning_rate=self.lr, momentum=0.9)
 
     # Training / validation process
-    def train(self):
+    def train(self, BATCH_SIZE, NUM_EPOCHS):
         train_fn = theano.function([self.input_var, self.target_var],
                                    self.train_loss, updates=self.updates)
         val_fn = theano.function([self.input_var, self.target_var],
@@ -226,10 +227,15 @@ def train_unary_model(images, gts):
     model = TinyNet()
     model.set_data(images, gts)
     model.build_cnn()
+
     model.set_train_loss()
     model.set_val_loss()
     model.set_update()
-    model.train()
+
+    num_epochs = 12
+    for i, batch_size in enumerate(BATCH_SIZE):
+        num_epochs += int(num_epochs*0.8)
+        model.train(batch_size, num_epochs)
 
     model.get_predictions(images[-1])
     return {}
