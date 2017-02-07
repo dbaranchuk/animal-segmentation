@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import numpy as np
 from math import exp
 import maxflow
@@ -16,7 +17,6 @@ from lasagne.updates import nesterov_momentum
 
 
 # Worker
-MAX_TRAIN_SIZE = 41
 MAX_NUM_EPOCHS = 51
 
 # num filters sets for every layers
@@ -24,8 +24,10 @@ NUM_FILTERS1_SET = (16, 16, 32)
 NUM_FILTERS2_SET = (16, 32, 64)
 NUM_FILTERS3_SET = (64, 128, 256)
 
-BATCH_SIZE_SET = (4096, 8192, 12288, 16384)
+BATCH_SIZE_SET = (8192, 12288, 16384)
 
+TRAIN_SIZE = 45
+VAL_SIZE = 5
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
@@ -39,7 +41,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
             excerpt = slice(start_idx, start_idx + batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def get_image_blocks(image, gt):
+def get_image_blocks(image, gt, pad):
     h, w = gt.shape
     bg_blocks = []
     obj_blocks = []
@@ -54,33 +56,31 @@ def get_image_blocks(image, gt):
                 obj_blocks.append(block)
     bg_blocks = np.array(bg_blocks).astype(np.float32)
     obj_blocks = np.array(obj_blocks).astype(np.float32)
+
     print len(bg_blocks) - len(obj_blocks)
     # Align numbers of background samples and object samples
     if len(bg_blocks) - len(obj_blocks) > 0:
-        bg_blocks = np.random.choice(bg_blocks, len(obj_blocks),
-                                     replace=False)
+        inds = np.arange(len(bg_blocks))
+        inds = np.random.choice(inds, len(obj_blocks), replace=False)
+        bg_blocks = bg_blocks[inds]
     else:
-        obj_blocks = np.random.choice(obj_blocks, len(bg_blocks),
-                                      replace=False)
-    print len(bg_blocks) - len(obj_blocks)
-
+        inds = np.arange(len(obj_blocks))
+        inds = np.random.choice(inds, len(bg_blocks), replace=False)
+        obj_blocks = obj_blocks[inds]
     y_bg = np.zeros(len(bg_blocks)).astype(np.int32)
     y_obj = np.ones(len(obj_blocks)).astype(np.int32)
-
-    X = np.hstack((bg_blocks, obj_blocks))
-    y = np.hstack((y_bg, y_obj))
+    X = np.concatenate((bg_blocks, obj_blocks), axis=0)
+    y = np.concatenate((y_bg, y_obj), axis=0)
     # Shuffle
-    permutation = np.random.permutation(len(bg_blocks) + len(obj_blocks))
+    permutation = np.random.permutation(2*len(bg_blocks))
     return (X[permutation], y[permutation])
 
 # Net for unary terms
 class TinyNet:
     # init params
-    def __init__(self, PAD, TRAIN_SIZE, NUM_EPOCHS, NUM_FILTERS1,
+    def __init__(self, PAD, NUM_EPOCHS, NUM_FILTERS1,
                  NUM_FILTERS2, NUM_FILTERS3, BATCH_SIZE):
         self.pad = PAD
-        self.train_size = TRAIN_SIZE
-        self.val_size = 5
         self.num_epochs = NUM_EPOCHS
         self.num_filters1 = NUM_FILTERS1
         self.num_filters2 = NUM_FILTERS2
@@ -112,20 +112,23 @@ class TinyNet:
 
     #Produce train/val data from input images
     def set_data(self, images, gts):
-        X_train = np.array([]).astype(np.float32)
-        y_train = np.array([]).astype(np.int32)
-        X_val = np.array([]).astype(np.float32)
-        y_val = np.array([]).astype(np.int32)
+        X_train, y_train = ([], [])
+        X_val, y_val = ([], [])
         pad = self.pad
         for n in range(len(images)):
-            X, y = get_image_blocks(images[n], gts[n])
-            if n < self.train_size:
-                np.hstack((X_train, X))
-                np.hstack((X_train, X))
-            elif n >= len(images) - self.val_size:
-                np.hstack((X_val, X))
-                np.hstack((X_val, X))
-        print(X_train.shape, y_train.shape, X_val.shape, y_val.shape)
+            X, y = get_image_blocks(images[n], gts[n], self.pad)
+            if n < TRAIN_SIZE:
+                X_train += list(X)
+                y_train += list(y)
+            elif n >= len(images) - VAL_SIZE:
+                X_val += list(X)
+                y_val += list(y)
+        self.X_train = np.array(X_train).astype(np.float32)
+        self.y_train = np.array(y_train).astype(np.int32)
+        self.X_val = np.array(X_val).astype(np.float32)
+        self.y_val = np.array(y_val).astype(np.int32)
+        print(self.X_train.shape, self.y_train.shape,
+              self.X_val.shape, self.y_val.shape)
 
     # Set a loss expression for training
     def set_train_loss(self):
@@ -195,7 +198,6 @@ class TinyNet:
         print ('='*50)
         print ('PAD = %d' % self.pad)
         print ('INPUT_SHAPE = ', self.input_shape)
-        print ('TRAIN_SIZE = %d' % self.train_size)
         print ('NUM_FILTERS1 = %d' % self.num_filters1)
         print ('NUM_FILTERS2 = %d' % self.num_filters2)
         print ('NUM_FILTERS3 = %d' % self.num_filters3)
@@ -221,15 +223,14 @@ def train_unary_model(images, gts):
     images = pad_images(images, pad)
     # From TF to TH order
     images = images.transpose(0,3,1,2)
-    train_size = 10 * (pad - 2)
-    for batch_size in BATCH_SIZE_SET[:train_size/10 + 1]:
+    for batch_size in BATCH_SIZE_SET:
         for ind in range(3):
             num_filters1 = NUM_FILTERS1_SET[ind]
             num_filters2 = NUM_FILTERS2_SET[ind]
             for num_filters3 in NUM_FILTERS3_SET:
                 for num_epochs in range(30, MAX_NUM_EPOCHS, 10):
                     # TRAIN
-                    model = TinyNet(pad, train_size, num_epochs, num_filters1,
+                    model = TinyNet(pad, num_epochs, num_filters1,
                                     num_filters2, num_filters3, batch_size)
                     model.print_params()
                     model.build_cnn()
@@ -254,14 +255,13 @@ def train_unary_model(images, gts):
 #    model.train()
 #    return {}
 
-def get_pairwise_term(pix1, pix2, y1, y2):
-    A, B, sigma = (1., 1., 1.)
-    # Distanse between two pixels
-    distanсe = lambda p1, p2: np.mean(p1 - p2)**2
-    # Penalty function
-    ksi = lambda x, y: A + B * exp(-distanсe(x, y)/(2 * sigma**2))
-
-    return ksi(pix1, pix2)
+#def get_pairwise_term(pix1, pix2):
+#    A, B, sigma = (1., 1., 1.)
+#    Distanse between two pixels
+#    distance = lambda p1, p2: np.mean(p1 - p2)**2
+#    Penalty function
+#    ksi = lambda x, y: A + B * exp(-distanсe(x, y)/(2 * sigma**2))
+#    return ksi(pix1, pix2)
 
 def min_cut(image):
     graph = maxflow.Graph[float]()
