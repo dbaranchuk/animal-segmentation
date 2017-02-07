@@ -125,7 +125,7 @@ class TinyNet:
         X_val, y_val = ([], [])
         pad = self.pad
         for n in range(len(images)):
-            X, y = get_image_blocks(images[n], self.pad, gts[n])
+            X, y = get_data(images[n], gts[n], self.pad)
             if n < TRAIN_SIZE:
                 X_train += list(X)
                 y_train += list(y)
