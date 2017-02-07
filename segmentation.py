@@ -170,7 +170,7 @@ class TinyNet:
         train_fn = theano.function([self.input_var, self.target_var],
                                    self.train_loss, updates=self.updates)
         val_fn = theano.function([self.input_var, self.target_var],
-                                 [self.test_loss, self.test_acc])
+                                 [self.val_loss, self.val_acc])
         for epoch in range(self.num_epochs):
             if epoch in self.lr_schedule:
                 lr = np.float32(self.lr_schedule[epoch])
