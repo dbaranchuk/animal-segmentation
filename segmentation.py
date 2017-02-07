@@ -255,21 +255,14 @@ def train_unary_model(images, gts):
 
 from math import exp
 
-
 def get_pairwise_term(pix1, pix2, y1, y2):
     A, B, sigma = (1., 1., 1.)
     # Distanse between two pixels
     distanсe = lambda p1, p2: np.mean(p1 - p2)**2
-    # Determine whether two marks belong to different objects
-    delta = lambda y1, y2: 0 if y1 == y2 else 1
     # Penalty function
     ksi = lambda x, y: A + B * exp(-distanсe(x, y)/(2 * sigma**2))
 
-    return delta(y1, y2) * ksi(pix1, pix2)
-
-
-def get_unary_terms(model):
-
+    return ksi(pix1, pix2)
 
 def min_cut(image):
     graph = maxflow.Graph[float]()
