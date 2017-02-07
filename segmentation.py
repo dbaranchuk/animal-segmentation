@@ -43,7 +43,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 
 
 def get_image_blocks(image, pad, gt=None):
-    h, w = image.shape[1:]
+    h, w = gt.shape
     blocks = []
     bg_blocks = []
     obj_blocks = []
@@ -52,13 +52,13 @@ def get_image_blocks(image, pad, gt=None):
             im_x, im_y = (i+pad, j+pad)
             block = image[:, im_x-pad:im_x+pad + 1,
                           im_y-pad:im_y+pad + 1]
-            if gt == None:
+            if gt is None:
                 blocks.append(block)
             elif gt[i,j] == 0:
                 bg_blocks.append(block)
             else:
                 obj_blocks.append(block)
-    if gt == None:
+    if gt is None:
         return np.array(blocks).astype(np.float32)
     else:
         return (np.array(bg_blocks).astype(np.float32),
@@ -125,7 +125,7 @@ class TinyNet:
         X_val, y_val = ([], [])
         pad = self.pad
         for n in range(len(images)):
-            X, y = get_image_blocks(images[n], gts[n], self.pad)
+            X, y = get_image_blocks(images[n], self.pad, gts[n])
             if n < TRAIN_SIZE:
                 X_train += list(X)
                 y_train += list(y)
