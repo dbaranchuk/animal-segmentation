@@ -25,10 +25,10 @@ NUM_FILTERS2 = 32
 NUM_FILTERS3 = 256
 
 PAD = 5
-BATCH_SIZE = 4098
+BATCH_SIZE = 16098
 TRAIN_SIZE = 45
 VAL_SIZE = 5
-NUM_EPOCHS = 25
+NUM_EPOCHS = 50
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
