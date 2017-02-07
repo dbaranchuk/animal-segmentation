@@ -24,7 +24,7 @@ NUM_FILTERS1_SET = (16, 16, 32)
 NUM_FILTERS2_SET = (16, 32, 64)
 NUM_FILTERS3_SET = (64, 128, 256)
 
-BATCH_SIZE_SET = (8192, 12288, 16384)
+BATCH_SIZE_SET = (16384, 32768)#(8192, 12288, 16384)
 
 TRAIN_SIZE = 45
 VAL_SIZE = 5
@@ -56,8 +56,6 @@ def get_image_blocks(image, gt, pad):
                 obj_blocks.append(block)
     bg_blocks = np.array(bg_blocks).astype(np.float32)
     obj_blocks = np.array(obj_blocks).astype(np.float32)
-
-    print len(bg_blocks) - len(obj_blocks)
     # Align numbers of background samples and object samples
     if len(bg_blocks) - len(obj_blocks) > 0:
         inds = np.arange(len(bg_blocks))
@@ -180,7 +178,7 @@ class TinyNet:
             val_acc = 0
             val_batches = 0
             for batch in iterate_minibatches(self.X_val, self.y_val,
-                                             self.batch_size, shuffle=False):
+                                             self.batch_size//8, shuffle=False):
                 inputs, targets = batch
                 err, acc = val_fn(inputs, targets)
                 val_err += err
@@ -219,26 +217,27 @@ def pad_images(images, pad):
 
 # WORKER
 def train_unary_model(images, gts):
-    pad = 5
-    images = pad_images(images, pad)
-    # From TF to TH order
-    images = images.transpose(0,3,1,2)
-    for batch_size in BATCH_SIZE_SET:
+
+    for pad in range(3,7,1):
+        images = pad_images(images, pad)
+        # From TF to TH order
+        images = images.transpose(0,3,1,2)
         for ind in range(3):
             num_filters1 = NUM_FILTERS1_SET[ind]
             num_filters2 = NUM_FILTERS2_SET[ind]
             for num_filters3 in NUM_FILTERS3_SET:
-                for num_epochs in range(30, MAX_NUM_EPOCHS, 10):
-                    # TRAIN
-                    model = TinyNet(pad, num_epochs, num_filters1,
-                                    num_filters2, num_filters3, batch_size)
-                    model.print_params()
-                    model.build_cnn()
-                    model.set_data(images, gts)
-                    model.set_train_loss()
-                    model.set_test_loss()
-                    model.set_update()
-                    model.train()
+                for batch_size in BATCH_SIZE_SET:
+                    for num_epochs in range(30, MAX_NUM_EPOCHS, 10):
+                        # TRAIN
+                        model = TinyNet(pad, num_epochs, num_filters1,
+                                        num_filters2, num_filters3, batch_size)
+                        model.print_params()
+                        model.build_cnn()
+                        model.set_data(images, gts)
+                        model.set_train_loss()
+                        model.set_test_loss()
+                        model.set_update()
+                        model.train()
     return {}
 
 # Main training function
