@@ -25,7 +25,7 @@ NUM_FILTERS2 = 32
 NUM_FILTERS3 = 256
 
 PAD = 5
-BATCH_SIZE = (2048, 4098, 8192, 16384)
+BATCH_SIZE = (1024, 2048, 4098, 8192, 16384)
 TRAIN_SIZE = 45
 VAL_SIZE = 5
 NUM_EPOCHS = 50
@@ -148,7 +148,7 @@ class TinyNet:
                                dtype=theano.config.floatX)
 
     # Set learning rate and Nesterov Momentum as update method
-    def set_update(self):
+    def set_update(self, NUM_EPOCHS):
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
@@ -230,16 +230,16 @@ def train_unary_model(images, gts):
 
     model.set_train_loss()
     model.set_val_loss()
-    model.set_update()
 
-    num_epochs = 12
+    num_epochs = 8
     for i, batch_size in enumerate(BATCH_SIZE):
         print
         print 'BATCH_SIZE = %d' % batch_size
         print 'NUM_EPOCHS = %d' % num_epochs
         print
-        num_epochs += int(num_epochs*0.8)
+        model.set_update(num_epochs)
         model.train(batch_size, num_epochs)
+        num_epochs += int(num_epochs*0.8)
 
     model.get_predictions(images[-1])
     return {}
