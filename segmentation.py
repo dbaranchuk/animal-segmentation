@@ -120,10 +120,11 @@ class TinyNet:
         X_val, y_val = ([], [])
         for n in range(len(images)):
             X, y = get_data(images[n], gts[n])
-            if n < TRAIN_SIZE:
+            #if n < TRAIN_SIZE:
+            if n > VAL_SIZE:
                 X_train += list(X)
                 y_train += list(y)
-            elif n >= len(images) - VAL_SIZE:
+            elif n <= VAL_SIZE:#len(images) - VAL_SIZE:
                 X_val += list(X)
                 y_val += list(y)
         self.X_train = np.array(X_train).astype(np.float32)
@@ -204,7 +205,7 @@ class TinyNet:
         preds = []
         for block in blocks:
             preds.append(test_fn(np.array([block])))
-        print preds
+        #print preds
 
 
 # Extend borders for extriving blocks for every pixel
