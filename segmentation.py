@@ -17,17 +17,17 @@ from lasagne.updates import nesterov_momentum
 
 
 # Worker
-MAX_NUM_EPOCHS = 51
+MAX_NUM_EPOCHS = 61
 
 # num filters sets for every layers
-NUM_FILTERS1_SET = (16, 16, 32)
-NUM_FILTERS2_SET = (16, 32, 64)
-NUM_FILTERS3_SET = (64, 128, 256)
+NUM_FILTERS1_SET = (16, 16)
+NUM_FILTERS2_SET = (16, 32)
+NUM_FILTERS3_SET = (128, 256)
 
-BATCH_SIZE_SET = (16384, 32768)#(8192, 12288, 16384)
-
+BATCH_SIZE = 16384 #(8192, 12288, 16384)
 TRAIN_SIZE = 45
 VAL_SIZE = 5
+
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
@@ -41,21 +41,32 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
             excerpt = slice(start_idx, start_idx + batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def get_image_blocks(image, gt, pad):
-    h, w = gt.shape
+
+def get_image_blocks(image, pad, gt=None):
+    h, w = image.shape[1:]
+    blocks = []
     bg_blocks = []
     obj_blocks = []
     for i in range(h):
         for j in range(w):
             im_x, im_y = (i+pad, j+pad)
             block = image[:, im_x-pad:im_x+pad + 1,
-            im_y-pad:im_y+pad + 1]
-            if gt[i,j] == 0:
+                          im_y-pad:im_y+pad + 1]
+            if gt == None:
+                blocks.append(block)
+            elif gt[i,j] == 0:
                 bg_blocks.append(block)
             else:
                 obj_blocks.append(block)
-    bg_blocks = np.array(bg_blocks).astype(np.float32)
-    obj_blocks = np.array(obj_blocks).astype(np.float32)
+    if gt == None:
+        return np.array(blocks).astype(np.float32)
+    else:
+        return (np.array(bg_blocks).astype(np.float32),
+               np.array(obj_blocks).astype(np.float32))
+
+
+def get_data(image, gt, pad):
+    bg_blocks, obj_blocks = get_image_blocks(image, pad, gt)
     # Align numbers of background samples and object samples
     if len(bg_blocks) - len(obj_blocks) > 0:
         inds = np.arange(len(bg_blocks))
@@ -73,17 +84,17 @@ def get_image_blocks(image, gt, pad):
     permutation = np.random.permutation(2*len(bg_blocks))
     return (X[permutation], y[permutation])
 
+
 # Net for unary terms
 class TinyNet:
     # init params
     def __init__(self, PAD, NUM_EPOCHS, NUM_FILTERS1,
-                 NUM_FILTERS2, NUM_FILTERS3, BATCH_SIZE):
+                 NUM_FILTERS2, NUM_FILTERS3):
         self.pad = PAD
         self.num_epochs = NUM_EPOCHS
         self.num_filters1 = NUM_FILTERS1
         self.num_filters2 = NUM_FILTERS2
         self.num_filters3 = NUM_FILTERS3
-        self.batch_size = BATCH_SIZE
         self.input_shape = (None, 3, 2*PAD + 1, 2*PAD + 1)
         self.input_var = T.tensor4('inputs')
         self.target_var = T.ivector('targets')
@@ -135,11 +146,11 @@ class TinyNet:
         self.train_loss = loss.mean()
 
     # Set a loss expression for validation/testing (ignoring dropout during the forward pass)
-    def set_test_loss(self):
+    def set_val_loss(self):
         prediction = get_output(self.model, deterministic=True)
         loss = categorical_crossentropy(prediction, self.target_var)
-        self.test_loss = loss.mean()
-        self.test_acc = T.mean(T.eq(T.argmax(prediction, axis=1), self.target_var),
+        self.val_loss = loss.mean()
+        self.val_acc = T.mean(T.eq(T.argmax(prediction, axis=1), self.target_var),
                                dtype=theano.config.floatX)
 
     # Set learning rate and Nesterov Momentum as update method
@@ -169,7 +180,7 @@ class TinyNet:
             train_batches = 0
             start_time = time.time()
             for batch in iterate_minibatches(self.X_train, self.y_train,
-                                             self.batch_size, shuffle=True):
+                                             BATCH_SIZE, shuffle=True):
                 inputs, targets = batch
                 train_err += train_fn(inputs, targets)
                 train_batches += 1
@@ -178,7 +189,7 @@ class TinyNet:
             val_acc = 0
             val_batches = 0
             for batch in iterate_minibatches(self.X_val, self.y_val,
-                                             self.batch_size//8, shuffle=False):
+                                             BATCH_SIZE//8, shuffle=False):
                 inputs, targets = batch
                 err, acc = val_fn(inputs, targets)
                 val_err += err
@@ -191,6 +202,16 @@ class TinyNet:
             print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
             print("  validation accuracy:\t\t{:.2f} %".format(val_acc / val_batches * 100))
 
+    def get_predictions(self, image):
+        prediction = get_output(self.model, deterministic=True)
+        test_fn = theano.function([self.input_var], prediction)
+        blocks = get_image_blocks(image, self.pad)
+
+        preds = []
+        for block in blocks:
+            preds.append(test_fn(block))
+        print preds
+
     def print_params(self):
         print
         print ('='*50)
@@ -200,7 +221,6 @@ class TinyNet:
         print ('NUM_FILTERS2 = %d' % self.num_filters2)
         print ('NUM_FILTERS3 = %d' % self.num_filters3)
         print ('NUM_EPOCHS = %d' % self.num_epochs)
-        print ('BATCH_SIZE = %d' % self.batch_size)
         print ('='*50)
         print
 
@@ -217,27 +237,24 @@ def pad_images(images, pad):
 
 # WORKER
 def train_unary_model(images, gts):
-
-    for pad in range(3,7,1):
+    for pad in range(5,7,1):
         images = pad_images(images, pad)
-        # From TF to TH order
         images = images.transpose(0,3,1,2)
         for ind in range(3):
             num_filters1 = NUM_FILTERS1_SET[ind]
             num_filters2 = NUM_FILTERS2_SET[ind]
             for num_filters3 in NUM_FILTERS3_SET:
-                for batch_size in BATCH_SIZE_SET:
-                    for num_epochs in range(30, MAX_NUM_EPOCHS, 10):
-                        # TRAIN
-                        model = TinyNet(pad, num_epochs, num_filters1,
-                                        num_filters2, num_filters3, batch_size)
-                        model.print_params()
-                        model.build_cnn()
-                        model.set_data(images, gts)
-                        model.set_train_loss()
-                        model.set_test_loss()
-                        model.set_update()
-                        model.train()
+                for num_epochs in range(40, MAX_NUM_EPOCHS, 10):
+                    # TRAIN
+                    model = TinyNet(pad, num_epochs, num_filters1,
+                                    num_filters2, num_filters3)
+                    model.print_params()
+                    model.build_cnn()
+                    model.set_data(images, gts)
+                    model.set_train_loss()
+                    model.set_val_loss()
+                    model.set_update()
+                    model.train()
     return {}
 
 # Main training function
@@ -254,19 +271,49 @@ def train_unary_model(images, gts):
 #    model.train()
 #    return {}
 
-#def get_pairwise_term(pix1, pix2):
-#    A, B, sigma = (1., 1., 1.)
-#    Distanse between two pixels
-#    distance = lambda p1, p2: np.mean(p1 - p2)**2
-#    Penalty function
-#    ksi = lambda x, y: A + B * exp(-distanсe(x, y)/(2 * sigma**2))
-#    return ksi(pix1, pix2)
+def compute_weights(X, Y):
+    A, B, sigma = (1., 1., 1.)
+    distance = lambda x, y: np.mean((x - y)**2, axis=0)
+    penalty_fn = lambda x: A + B * np.exp(-x / (2 * sigma**2))
+    dist = distance(X, Y)
+    return penalty_fn(dist)
+
 
 def min_cut(image):
     graph = maxflow.Graph[float]()
-    graph.add_grid_nodes(image.shape)
+    nodeids = graph.add_grid_nodes(image.shape)
+
+    # Set Unary Terms
+
+    # Set Pairwise Terms
+    # Compute Horizontal Weights
+    h, w = image.shape
+    h_image_1 = image.copy()[1:, :]
+    h_image_2 = image.copy()[:-1, :]
+    h_weights = compute_weights(h_image_1, h_image_2)
+    h_struct = np.array([[0, 0, 0],
+                         [0, 0, 0],
+                         [0, 1, 0]])
+    graph.add_grid_edges(nodeids, h_weights, h_struct)
+
+    # Compute Vertical Weights
+    v_image_1 = image.copy()[:, 1:]
+    v_image_2 = image.copy()[:, :-1]
+    v_weights = compute_weights(v_image_1, v_image_2)
+    v_struct = np.array([[0, 0, 0],
+                         [0, 0, 1],
+                         [0, 0, 0]])
+    graph.add_grid_edges(nodeids, v_weights, v_struct)
+
+    graph.maxflow()
+    sgm = graph.get_grid_segments(nodeids)
+
 
 def segmentation(unary_model, images):
+    images = pad_images(images, 5)
+    # From TF to TH order
+    images = images.transpose(0,3,1,2)
+
     return [np.zeros(img.shape[:2]) for img in images]
 
 
