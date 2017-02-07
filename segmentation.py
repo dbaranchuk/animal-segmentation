@@ -148,7 +148,7 @@ class TinyNet:
                                dtype=theano.config.floatX)
 
     # Set learning rate and Nesterov Momentum as update method
-    def set_update(self, NUM_EPOCHS):
+    def set_update(self):
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
@@ -160,7 +160,7 @@ class TinyNet:
                                          learning_rate=self.lr, momentum=0.9)
 
     # Training / validation process
-    def train(self, BATCH_SIZE, NUM_EPOCHS):
+    def train(self):
         train_fn = theano.function([self.input_var, self.target_var],
                                    self.train_loss, updates=self.updates)
         val_fn = theano.function([self.input_var, self.target_var],
@@ -229,7 +229,7 @@ def train_unary_model(images, gts):
     model.build_cnn()
     model.set_train_loss()
     model.set_val_loss()
-    model.set_update(num_epochs)
+    model.set_update()
     model.train()
 
     model.get_predictions(images[-1])
