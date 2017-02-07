@@ -235,8 +235,8 @@ def train_unary_model(images, gts):
     num_epochs = 12
     for i, batch_size in enumerate(BATCH_SIZE):
         print
-        print 'BATCH_SIZE = %' % batch_size
-        print 'NUM_EPOCHS = %' % num_epochs
+        print 'BATCH_SIZE = %d' % batch_size
+        print 'NUM_EPOCHS = %d' % num_epochs
         print
         num_epochs += int(num_epochs*0.8)
         model.train(batch_size, num_epochs)
