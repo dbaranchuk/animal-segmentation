@@ -179,7 +179,6 @@ class TinyNet:
             train_err = 0
             train_batches = 0
             start_time = time.time()
-            print(len(self.X_train), len(self.y_train))
             for batch in iterate_minibatches(self.X_train, self.y_train,
                                              BATCH_SIZE, shuffle=True):
                 inputs, targets = batch
