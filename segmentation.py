@@ -38,6 +38,40 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
             excerpt = slice(start_idx, start_idx + batchsize)
         yield inputs[excerpt], targets[excerpt]
 
+def get_image_blocks(image, gt):
+    h, w = gt.shape
+    bg_blocks = []
+    obj_blocks = []
+    for i in range(h):
+        for j in range(w):
+            im_x, im_y = (i+pad, j+pad)
+            block = image[:, im_x-pad:im_x+pad + 1,
+            im_y-pad:im_y+pad + 1]
+            if gt[i,j] == 0:
+                bg_blocks.append(block)
+            else:
+                obj_blocks.append(block)
+    bg_blocks = np.array(bg_blocks).astype(np.float32)
+    obj_blocks = np.array(obj_blocks).astype(np.float32)
+    print len(bg_blocks) - len(obj_blocks)
+    # Align numbers of background samples and object samples
+    if len(bg_blocks) - len(obj_blocks) > 0:
+        bg_blocks = np.random.choice(bg_blocks, len(obj_blocks),
+                                     replace=False)
+    else:
+        obj_blocks = np.random.choice(obj_blocks, len(bg_blocks),
+                                      replace=False)
+    print len(bg_blocks) - len(obj_blocks)
+
+    y_bg = np.zeros(len(bg_blocks)).astype(np.int32)
+    y_obj = np.ones(len(obj_blocks)).astype(np.int32)
+
+    X = np.hstack((bg_blocks, obj_blocks))
+    y = np.hstack((y_bg, y_obj))
+    # Shuffle
+    permutation = np.random.permutation(len(bg_blocks) + len(obj_blocks))
+    return (X[permutation], y[permutation])
+
 # Net for unary terms
 class TinyNet:
     # init params
@@ -77,27 +111,20 @@ class TinyNet:
 
     #Produce train/val data from input images
     def set_data(self, images, gts):
-        X_train, y_train = ([],[])
-        X_val, y_val = ([],[])
+        X_train = np.array([]).astype(np.float32)
+        y_train = np.array([]).astype(np.int32)
+        X_val = np.array([]).astype(np.float32)
+        y_val = np.array([]).astype(np.int32)
         pad = self.pad
         for n in range(len(images)):
-            image, gt = (images[n], gts[n])
-            h, w = gts[n].shape
-            for i in range(h):
-                for j in range(w):
-                    im_x, im_y = (i+pad, j+pad)
-                    block = image[:, im_x-pad:im_x+pad + 1, im_y-pad:im_y+pad + 1]
-                    if n < self.train_size:
-                        X_train.append(block)
-                        y_train.append(gt[i,j])
-                    elif n >= len(images) - self.val_size:
-                        X_val.append(block)
-                        y_val.append(gt[i,j])
-        self.X_train = np.array(X_train).astype(np.float32)
-        self.y_train = np.array(y_train).astype(np.int32)
-        self.X_val = np.array(X_val).astype(np.float32)
-        self.y_val = np.array(y_val).astype(np.int32)
-        print(len(X_train), len(y_train), len(X_val), len(y_val))
+            X, y = get_image_blocks(images[n], gts[n])
+            if n < self.train_size:
+                np.hstack((X_train, X))
+                np.hstack((X_train, X))
+            elif n >= len(images) - self.val_size:
+                np.hstack((X_val, X))
+                np.hstack((X_val, X))
+        print(X_train.shape, y_train.shape, X_val.shape, y_val.shape)
 
     # Set a loss expression for training
     def set_train_loss(self):
@@ -177,13 +204,13 @@ class TinyNet:
         print
 
 # Extend borders for extriving blocks for every pixel
-def pad_images(images, PAD):
+def pad_images(images, pad):
     new_images = []
     for image in images:
         h, w, c = image.shape
-        new_image = np.zeros((h + 2*PAD, w + 2*PAD, c))
+        new_image = np.zeros((h + 2*pad, w + 2*pad, c))
         for i in range(image.shape[2]):
-            new_image[...,i] = np.lib.pad(image[...,i], (PAD,PAD), 'reflect')
+            new_image[...,i] = np.lib.pad(image[...,i], (pad, pad), 'reflect')
         new_images.append(new_image)
     return np.array(new_images)
 
@@ -226,11 +253,23 @@ def train_unary_model(images, gts):
 #    model.train()
 #    return {}
 
-A = 1.
-B = 1.
-sigma = 1.
-def potts_model():
-    delta = img[i, j]
+from math import exp
+
+
+def get_pairwise_term(pix1, pix2, y1, y2):
+    A, B, sigma = (1., 1., 1.)
+    # Distanse between two pixels
+    distanсe = lambda p1, p2: np.mean(p1 - p2)**2
+    # Determine whether two marks belong to different objects
+    delta = lambda y1, y2: 0 if y1 == y2 else 1
+    # Penalty function
+    ksi = lambda x, y: A + B * exp(-distanсe(x, y)/(2 * sigma**2))
+
+    return delta(y1, y2) * ksi(pix1, pix2)
+
+
+def get_unary_terms(model):
+
 
 def min_cut(image):
     graph = maxflow.Graph[float]()
