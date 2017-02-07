@@ -25,10 +25,10 @@ NUM_FILTERS2 = 32
 NUM_FILTERS3 = 256
 
 PAD = 5
-BATCH_SIZE = (1024, 2048, 4098, 8192, 16384)
+BATCH_SIZE = 4098
 TRAIN_SIZE = 45
 VAL_SIZE = 5
-NUM_EPOCHS = 50
+NUM_EPOCHS = 25
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
@@ -203,7 +203,7 @@ class TinyNet:
 
         preds = []
         for block in blocks:
-            preds.append(test_fn(block))
+            preds.append(test_fn(np.array([block]))
         print preds
 
 
@@ -226,18 +226,11 @@ def train_unary_model(images, gts):
 
     model = TinyNet()
     model.set_data(images, gts)
-    num_epochs = 8
-    for i, batch_size in enumerate(BATCH_SIZE):
-        print
-        print 'BATCH_SIZE = %d' % batch_size
-        print 'NUM_EPOCHS = %d' % num_epochs
-        print
-        model.build_cnn()
-        model.set_train_loss()
-        model.set_val_loss()
-        model.set_update(num_epochs)
-        model.train(batch_size, num_epochs)
-        num_epochs += int(num_epochs*0.8)
+    model.build_cnn()
+    model.set_train_loss()
+    model.set_val_loss()
+    model.set_update(num_epochs)
+    model.train()
 
     model.get_predictions(images[-1])
     return {}
