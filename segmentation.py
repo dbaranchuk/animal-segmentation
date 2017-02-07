@@ -24,10 +24,11 @@ NUM_FILTERS1_SET = (16, 16)
 NUM_FILTERS2_SET = (16, 32)
 NUM_FILTERS3_SET = (128, 256)
 
+PAD = 5
 BATCH_SIZE = 16384 #(8192, 12288, 16384)
 TRAIN_SIZE = 45
 VAL_SIZE = 5
-
+NUM_EPOCHS = 50
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
@@ -42,16 +43,16 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
         yield inputs[excerpt], targets[excerpt]
 
 
-def get_image_blocks(image, pad, gt=None):
+def get_image_blocks(image, gt=None):
     h, w = gt.shape
     blocks = []
     bg_blocks = []
     obj_blocks = []
     for i in range(h):
         for j in range(w):
-            im_x, im_y = (i+pad, j+pad)
-            block = image[:, im_x-pad:im_x+pad + 1,
-                          im_y-pad:im_y+pad + 1]
+            im_x, im_y = (i+PAD, j+PAD)
+            block = image[:, im_x-PAD:im_x+PAD + 1,
+                          im_y-PAD:im_y+PAD + 1]
             if gt is None:
                 blocks.append(block)
             elif gt[i,j] == 0:
@@ -65,8 +66,8 @@ def get_image_blocks(image, pad, gt=None):
                np.array(obj_blocks).astype(np.float32))
 
 
-def get_data(image, gt, pad):
-    bg_blocks, obj_blocks = get_image_blocks(image, pad, gt)
+def get_data(image, gt):
+    bg_blocks, obj_blocks = get_image_blocks(image, gt)
     # Align numbers of background samples and object samples
     if len(bg_blocks) - len(obj_blocks) > 0:
         inds = np.arange(len(bg_blocks))
@@ -87,11 +88,10 @@ def get_data(image, gt, pad):
 
 # Net for unary terms
 class TinyNet:
+    def __init__(self):
+        return
     # init params
-    def __init__(self, PAD, NUM_EPOCHS, NUM_FILTERS1,
-                 NUM_FILTERS2, NUM_FILTERS3):
-        self.pad = PAD
-        self.num_epochs = NUM_EPOCHS
+    def set_params(self, NUM_FILTERS1, NUM_FILTERS2, NUM_FILTERS3):
         self.num_filters1 = NUM_FILTERS1
         self.num_filters2 = NUM_FILTERS2
         self.num_filters3 = NUM_FILTERS3
@@ -123,9 +123,8 @@ class TinyNet:
     def set_data(self, images, gts):
         X_train, y_train = ([], [])
         X_val, y_val = ([], [])
-        pad = self.pad
         for n in range(len(images)):
-            X, y = get_data(images[n], gts[n], self.pad)
+            X, y = get_data(images[n], gts[n])
             if n < TRAIN_SIZE:
                 X_train += list(X)
                 y_train += list(y)
@@ -158,8 +157,8 @@ class TinyNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
-            self.num_epochs//2: 0.001,
-            #self.num_epochs-5: 0.0001
+            20: 0.001,
+            #NUM_EPOCHS-5: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
         self.updates = nesterov_momentum(self.train_loss, params,
@@ -171,7 +170,7 @@ class TinyNet:
                                    self.train_loss, updates=self.updates)
         val_fn = theano.function([self.input_var, self.target_var],
                                  [self.val_loss, self.val_acc])
-        for epoch in range(self.num_epochs):
+        for epoch in range(NUM_EPOCHS):
             if epoch in self.lr_schedule:
                 lr = np.float32(self.lr_schedule[epoch])
                 print(" setting learning rate to %.7f" % lr)
@@ -196,7 +195,7 @@ class TinyNet:
                 val_acc += acc
                 val_batches += 1
 
-            print("Epoch {} of {} took {:.3f}s".format(epoch + 1, self.num_epochs,
+            print("Epoch {} of {} took {:.3f}s".format(epoch + 1, NUM_EPOCHS,
                                                     time.time() - start_time))
             print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
             print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
@@ -205,7 +204,7 @@ class TinyNet:
     def get_predictions(self, image):
         prediction = get_output(self.model, deterministic=True)
         test_fn = theano.function([self.input_var], prediction)
-        blocks = get_image_blocks(image, self.pad)
+        blocks = get_image_blocks(image)
 
         preds = []
         for block in blocks:
@@ -215,12 +214,12 @@ class TinyNet:
     def print_params(self):
         print
         print ('='*50)
-        print ('PAD = %d' % self.pad)
+        print ('PAD = %d' % PAD)
         print ('INPUT_SHAPE = ', self.input_shape)
         print ('NUM_FILTERS1 = %d' % self.num_filters1)
         print ('NUM_FILTERS2 = %d' % self.num_filters2)
         print ('NUM_FILTERS3 = %d' % self.num_filters3)
-        print ('NUM_EPOCHS = %d' % self.num_epochs)
+        print ('NUM_EPOCHS = %d' % NUM_EPOCHS)
         print ('='*50)
         print
 
@@ -237,24 +236,23 @@ def pad_images(images, pad):
 
 # WORKER
 def train_unary_model(images, gts):
-    for pad in range(5,7,1):
-        images = pad_images(images, pad)
-        images = images.transpose(0,3,1,2)
-        for ind in range(3):
-            num_filters1 = NUM_FILTERS1_SET[ind]
-            num_filters2 = NUM_FILTERS2_SET[ind]
-            for num_filters3 in NUM_FILTERS3_SET:
-                for num_epochs in range(40, MAX_NUM_EPOCHS, 10):
-                    # TRAIN
-                    model = TinyNet(pad, num_epochs, num_filters1,
-                                    num_filters2, num_filters3)
-                    model.print_params()
-                    model.build_cnn()
-                    model.set_data(images, gts)
-                    model.set_train_loss()
-                    model.set_val_loss()
-                    model.set_update()
-                    model.train()
+    images = pad_images(images, PAD)
+    images = images.transpose(0,3,1,2)
+    model = TinyNet()
+    model.set_data(images, gts)
+
+    for ind in range(2):
+        num_filters1 = NUM_FILTERS1_SET[ind]
+        num_filters2 = NUM_FILTERS2_SET[ind]
+        for num_filters3 in NUM_FILTERS3_SET:
+            # TRAIN
+            model.set_params(num_filters1, num_filters2, num_filters3)
+            model.print_params()
+            model.build_cnn()
+            model.set_train_loss()
+            model.set_val_loss()
+            model.set_update()
+            model.train()
     return {}
 
 # Main training function
