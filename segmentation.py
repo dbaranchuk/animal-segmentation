@@ -203,7 +203,7 @@ class TinyNet:
 
         preds = []
         for block in blocks:
-            preds.append(test_fn(np.array([block]))
+            preds.append(test_fn(np.array([block])))
         print preds
 
 
