@@ -1,4 +1,5 @@
 import numpy as np
+from math import exp
 import maxflow
 import time
 import theano
@@ -252,8 +253,6 @@ def train_unary_model(images, gts):
 #    model.set_update()
 #    model.train()
 #    return {}
-
-from math import exp
 
 def get_pairwise_term(pix1, pix2, y1, y2):
     A, B, sigma = (1., 1., 1.)
