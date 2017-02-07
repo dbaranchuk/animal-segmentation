@@ -226,17 +226,15 @@ def train_unary_model(images, gts):
 
     model = TinyNet()
     model.set_data(images, gts)
-    model.build_cnn()
-
-    model.set_train_loss()
-    model.set_val_loss()
-
     num_epochs = 8
     for i, batch_size in enumerate(BATCH_SIZE):
         print
         print 'BATCH_SIZE = %d' % batch_size
         print 'NUM_EPOCHS = %d' % num_epochs
         print
+        model.build_cnn()
+        model.set_train_loss()
+        model.set_val_loss()
         model.set_update(num_epochs)
         model.train(batch_size, num_epochs)
         num_epochs += int(num_epochs*0.8)
