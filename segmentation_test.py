@@ -5,7 +5,7 @@ import time
 from skimage.io import imread, imsave
 from segmentation import train_unary_model, segmentation
 
-TRAIN_SIZE = 62
+TEST_SIZE = 4
 
 def load_data(path):
     if path[-1] != '/':
@@ -36,8 +36,7 @@ if len(sys.argv) < 3:
     print("Usage: %s train_folder test_folder [-v vis_folder]" % sys.argv[0])
     sys.exit(1)
 start_time = time.time()
-train_dir = sys.argv[1]
-#test_dir = sys.argv[2]
+data_dir = sys.argv[1]
 visualisation_needed = (len(sys.argv) > 3) and (sys.argv[3] == '-v')
 if visualisation_needed:
     if len(sys.argv)<5:
@@ -46,18 +45,15 @@ if visualisation_needed:
     else:
         vis_dir = sys.argv[4]
 
-#train_imgs, train_gt = load_data(train_dir)
-data_imgs, data_gt = load_data(train_dir)
-DATA_SIZE = len(data_imgs)
-
-train_imgs = data_imgs[:TRAIN_SIZE]
-train_gt = data_gt[:TRAIN_SIZE]
-test_imgs = data_imgs[TRAIN_SIZE:DATA_SIZE]
-test_gt = data_gt[TRAIN_SIZE:DATA_SIZE]
+data_imgs, data_gt = load_data(data_dir)
+train_imgs = data_imgs[TEST_SIZE:]
+train_gt = data_gt[TEST_SIZE:]
+test_imgs = data_imgs[:TEST_SIZE]
+test_gt = data_gt[:TEST_SIZE]
 
 unary_model = train_unary_model(train_imgs, train_gt)
 del train_imgs, train_gt
-exit()
+
 # Test
 test_predicted = segmentation(unary_model, test_imgs)
 result = computeIoU(test_predicted, test_gt)
