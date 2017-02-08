@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 import numpy as np
-from math import exp
 import maxflow
 import time
 import theano
@@ -24,8 +23,8 @@ NUM_FILTERS3 = 256
 DROPOUT = 0.1
 
 PAD = 5
-BATCH_SIZE = 2048#4096
-VAL_SIZE = 1
+BATCH_SIZE = 2048
+VAL_SIZE = 5
 NUM_EPOCHS = 12
 
 
@@ -135,8 +134,6 @@ class TinyNet:
         self.y_train = np.array(y_train).astype(np.int32)
         self.X_val = np.array(X_val).astype(np.float32)
         self.y_val = np.array(y_val).astype(np.int32)
-        print(self.X_train.shape, self.y_train.shape,
-              self.X_val.shape, self.y_val.shape)
 
     # Set a loss expression for training
     def set_train_loss(self):
@@ -289,6 +286,7 @@ def minimal_cut(model, image):
     # Compute Maxflow
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
+    print(type(srm[0][0]))
     result = np.int_(sgm)
     return result
 
