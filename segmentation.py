@@ -243,7 +243,7 @@ def train_unary_model(images, gts):
     model.train()
 
     model.get_predictions(images[-1])
-    return {}
+    return model
 
 def compute_weights(X, Y):
     A, B, sigma = (1., 1., 1.)
