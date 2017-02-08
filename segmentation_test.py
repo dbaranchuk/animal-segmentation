@@ -57,10 +57,9 @@ test_gt = data_gt[TRAIN_SIZE:DATA_SIZE]
 
 unary_model = train_unary_model(train_imgs, train_gt)
 del train_imgs, train_gt
-exit()
 
 # Test
-test_predicted = segmentation(unary_model, test_imgs)
+test_predicted = segmentation(unary_model, test_imgs[:1])
 result = computeIoU(test_predicted, test_gt)
 print("Result: %.4f" % result)
 if visualisation_needed:

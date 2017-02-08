@@ -6,6 +6,7 @@ import time
 import theano
 import theano.tensor as T
 from skimage.util import pad
+from matplotlib import pyplot as plt
 
 from lasagne.layers import InputLayer, Conv2DLayer, DenseLayer, \
                           ElemwiseSumLayer, MaxPool2DLayer,     \
@@ -28,7 +29,7 @@ PAD = 5
 BATCH_SIZE = 4098
 TRAIN_SIZE = 45
 VAL_SIZE = 5
-NUM_EPOCHS = 50
+NUM_EPOCHS = 25
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
@@ -205,7 +206,15 @@ class TinyNet:
         preds = []
         for block in blocks:
             preds.append(test_fn(np.array([block])))
-        #print preds
+
+        h = image.shape[1] - 2*PAD
+        w = image.shape[2] - 2*PAD
+
+        map = np.array(preds).reshape(h, w, 2)
+        print map[:5,:5]
+        map = map.transpose(2,0,1)
+        return map
+
 
 
 # Extend borders for extriving blocks for every pixel
@@ -244,11 +253,14 @@ def compute_weights(X, Y):
     return penalty_fn(dist)
 
 
-def min_cut(image):
+# Minimal Graph Cut
+def minimal_cut(model, image):
     graph = maxflow.Graph[float]()
     nodeids = graph.add_grid_nodes(image.shape)
 
     # Set Unary Terms
+    map = model.get_predictions(image)
+    graph.add_grid_tedges(nodeids, map[0], map[1])
 
     # Set Pairwise Terms
     # Compute Horizontal Weights
@@ -272,14 +284,22 @@ def min_cut(image):
 
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
-
+    result = np.int_(np.logical_not(sgm))
+    # Show the result.
+    plt.imshow(result)
+    plt.show()
+    print result.shape
+    return result
 
 def segmentation(unary_model, images):
     images = pad_images(images, 5)
     # From TF to TH order
     images = images.transpose(0,3,1,2)
-
-    return [np.zeros(img.shape[:2]) for img in images]
+    results = []
+    for image in images:
+        result = minimal_cut(unary_model, image)
+        results.append(result)
+    return results
 
 
 
