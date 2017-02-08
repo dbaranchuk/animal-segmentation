@@ -10,7 +10,8 @@ from skimage.io import imsave
 
 from lasagne.layers import InputLayer, Conv2DLayer, DenseLayer, \
                           ElemwiseSumLayer, MaxPool2DLayer,     \
-                          get_output, get_all_params, batch_norm
+                          get_output, get_all_params, batch_norm, \
+                          dropout, spatial_dropout
 from lasagne.init import HeNormal
 from lasagne.nonlinearities import rectify, softmax
 from lasagne.objectives import categorical_crossentropy
@@ -109,6 +110,7 @@ class TinyNet:
         l_conv2 = batch_norm(l_conv2)
         # Pool
         l_max = MaxPool2DLayer(l_conv2, pool_size=(2, 2))
+        l_max = batch_norm(l_max)
         # FC
         l_dense = DenseLayer(l_max, num_units=NUM_FILTERS3, nonlinearity=rectify)
         # Softmax Output
