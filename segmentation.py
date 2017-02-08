@@ -211,7 +211,6 @@ class TinyNet:
         w = image.shape[2] - 2*PAD
 
         map = np.array(preds).reshape(h, w, 2)
-        print map[:5,:5]
         map = map.transpose(2,0,1)
         return map
 
@@ -241,8 +240,6 @@ def train_unary_model(images, gts):
     model.set_val_loss()
     model.set_update()
     model.train()
-
-    model.get_predictions(images[-1])
     return model
 
 def compute_weights(X, Y):
@@ -288,8 +285,7 @@ def minimal_cut(model, image):
 
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
-    result = np.int_(np.logical_not(sgm))
-    print result.shape
+    result = np.int_(sgm)
     return result
 
 def segmentation(unary_model, images):
