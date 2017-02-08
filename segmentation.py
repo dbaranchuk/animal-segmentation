@@ -6,7 +6,6 @@ import time
 import theano
 import theano.tensor as T
 from skimage.util import pad
-from skimage.io import imsave
 
 from lasagne.layers import InputLayer, Conv2DLayer, DenseLayer, \
                           ElemwiseSumLayer, MaxPool2DLayer,     \
@@ -18,17 +17,20 @@ from lasagne.objectives import categorical_crossentropy
 from lasagne.updates import nesterov_momentum
 
 
-# num filters sets for every layers
+# Net params
 NUM_FILTERS1 = 16
 NUM_FILTERS2 = 32
 NUM_FILTERS3 = 256
+DROPOUT = 0.1
 
 PAD = 5
 BATCH_SIZE = 2048#4096
-TRAIN_SIZE = 56
-VAL_SIZE = 1
+TRAIN_SIZE = 57
+VAL_SIZE = 5
 NUM_EPOCHS = 20
 
+
+# Producing minibatches for training/validation
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
     if shuffle:
@@ -42,6 +44,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
         yield inputs[excerpt], targets[excerpt]
 
 
+# Split image on (3, 2*PAD+1, 2*PAD+1) regions for every pixel
 def get_image_blocks(image, gt=None):
     h = image.shape[1] - 2*PAD
     w = image.shape[2] - 2*PAD
@@ -66,6 +69,7 @@ def get_image_blocks(image, gt=None):
                np.array(obj_blocks).astype(np.float32))
 
 
+# Process image blocks
 def get_data(image, gt):
     bg_blocks, obj_blocks = get_image_blocks(image, gt)
     # Align numbers of background samples and object samples
@@ -100,21 +104,17 @@ class TinyNet:
         # Conv1
         l_conv1 = Conv2DLayer(l_in, num_filters=NUM_FILTERS1, filter_size=3,
                               nonlinearity=rectify, W=HeNormal())
-        l_drop1 = spatial_dropout(l_conv1, 0.1)
+        l_drop1 = spatial_dropout(l_conv1, DROPOUT)
         # Conv2
         l_conv2 = Conv2DLayer(l_drop1, num_filters=NUM_FILTERS2, filter_size=2,
                               stride=2, nonlinearity=rectify, W=HeNormal())
-        l_drop2 = spatial_dropout(l_conv2, 0.2)
-        # Conv2
-        #l_conv3 = Conv2DLayer(l_drop2, num_filters=NUM_FILTERS2, filter_size=2,
-        #                      stride=2, nonlinearity=rectify, W=HeNormal())
-        #l_drop3 = spatial_dropout(l_conv3, 0.2)
+        l_drop2 = spatial_dropout(l_conv2, 2*DROPOUT)
         # Pool
         l_max = MaxPool2DLayer(l_drop2, pool_size=(2, 2))
         l_max = batch_norm(l_max)
         # FC
         l_dense = DenseLayer(l_max, num_units=NUM_FILTERS3, nonlinearity=rectify)
-        l_drop3 = dropout(l_dense, 0.4)
+        l_drop3 = dropout(l_dense, 4*DROPOUT)
         # Softmax Output
         l_out = DenseLayer(l_drop3, num_units=2, nonlinearity=softmax)
         self.model = l_out
@@ -219,7 +219,6 @@ class TinyNet:
         return map
 
 
-
 # Extend borders for extriving blocks for every pixel
 def pad_images(images, pad):
     new_images = []
@@ -246,13 +245,13 @@ def train_unary_model(images, gts):
     model.train()
     return model
 
+# Potts Model for Pairwise Terms
 def compute_weights(X, Y):
     A, B, sigma = (1., 1., 1.)
     distance = lambda x, y: np.mean((x - y)**2, axis=0)
     penalty_fn = lambda x: A + B * np.exp(-x / (2 * sigma**2))
     dist = distance(X, Y)
     return penalty_fn(dist)
-
 
 # Minimal Graph Cut
 def minimal_cut(model, image):
@@ -265,33 +264,37 @@ def minimal_cut(model, image):
     graph.add_grid_tedges(nodeids, map[0], map[1])
 
     # Set Pairwise Terms
-    # Compute Horizontal Weights
+    # Compute Vertical Weights
     zero_line = np.zeros(image.shape[2])
-    h_image_1 = image.copy()[:, 1:, :]
-    h_image_2 = image.copy()[:, :-1, :]
-    h_weights = compute_weights(h_image_1, h_image_2)
-    h_weights = np.vstack((h_weights, zero_line))
-    h_struct = np.array([[0, 0, 0],
+    v_image_1 = image.copy()[:, 1:, :]
+    v_image_2 = image.copy()[:, :-1, :]
+    v_weights = compute_weights(v_image_1, v_image_2)
+    v_weights = np.vstack((v_weights, zero_line))
+    v_struct = np.array([[0, 0, 0],
                          [0, 0, 0],
                          [0, 1, 0]])
-    graph.add_grid_edges(nodeids, h_weights, h_struct, symmetric=True)
-
-    # Compute Vertical Weights
-    zero_line = np.zeros((image.shape[1], 1))
-    v_image_1 = image.copy()[:, :, 1:]
-    v_image_2 = image.copy()[:, :, :-1]
-    v_weights = compute_weights(v_image_1, v_image_2)
-    v_weights = np.hstack((v_weights, zero_line))
-    v_struct = np.array([[0, 0, 0],
-                         [0, 0, 1],
-                         [0, 0, 0]])
     graph.add_grid_edges(nodeids, v_weights, v_struct, symmetric=True)
 
+    # Compute Horizontal Weights
+    zero_line = np.zeros((image.shape[1], 1))
+    h_image_1 = image.copy()[:, :, 1:]
+    h_image_2 = image.copy()[:, :, :-1]
+    h_weights = compute_weights(h_image_1, h_image_2)
+    h_weights = np.hstack((h_weights, zero_line))
+    h_struct = np.array([[0, 0, 0],
+                         [0, 0, 1],
+                         [0, 0, 0]])
+    graph.add_grid_edges(nodeids, h_weights, h_struct, symmetric=True)
+
+    # Compute Maxflow
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
     result = np.int_(sgm)
     return result
 
+# Do Segmentation using Minimal Graph Cut
+#   Unary terms: Net's output
+#   Pairwise terms: Potts Model's output
 def segmentation(unary_model, images):
     # From TF to TH order
     images = np.array(images).transpose(0,3,1,2)
@@ -301,31 +304,3 @@ def segmentation(unary_model, images):
         results.append(result)
     return results
 
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-    # Bottleneck
-    def residual_block(layer, num_filters):
-    l_conv1 = Conv2DLayer(layer, num_filters/4, filter_size=1, pad='same',
-    nonlinearity=rectify, W=HeNormal())
-    l_conv1 = batch_norm(l_conv1)
-
-    l_conv2 = Conv2DLayer(l_conv1, num_filters/4, filter_size=3, pad='same',
-    nonlinearity=rectify, W=HeNormal())
-    l_conv2 = batch_norm(l_conv2)
-
-    l_conv3 = Conv2DLayer(l_conv2, num_filters, filter_size=1, pad='same',
-    nonlinearity=rectify, W=HeNormal())
-    l_conv3 = batch_norm(l_conv3)
-    return ElemwiseSumLayer([l_conv3, layer])
-'''

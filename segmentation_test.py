@@ -5,7 +5,7 @@ import time
 from skimage.io import imread, imsave
 from segmentation import train_unary_model, segmentation
 
-TRAIN_SIZE = 52
+TRAIN_SIZE = 62
 
 def load_data(path):
     if path[-1] != '/':
@@ -57,7 +57,7 @@ test_gt = data_gt[TRAIN_SIZE:DATA_SIZE]
 
 unary_model = train_unary_model(train_imgs, train_gt)
 del train_imgs, train_gt
-
+exit()
 # Test
 test_predicted = segmentation(unary_model, test_imgs)
 result = computeIoU(test_predicted, test_gt)
