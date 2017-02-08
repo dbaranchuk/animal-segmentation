@@ -203,14 +203,12 @@ class TinyNet:
         prediction = get_output(self.model, deterministic=True)
         test_fn = theano.function([self.input_var], prediction)
         blocks = get_image_blocks(image)
-
         preds = []
         for block in blocks:
             preds.append(test_fn(np.array([block])))
 
         h = image.shape[1] - 2*PAD
         w = image.shape[2] - 2*PAD
-
         map = np.array(preds).reshape(h, w, 2)
         map = map.transpose(2,0,1)
         return map
@@ -233,6 +231,7 @@ def train_unary_model(images, gts):
     images = np.array(images).transpose(0,3,1,2)
     images = pad_images(images, PAD)
 
+    # Construct and Train Net
     model = TinyNet()
     model.set_data(images, gts)
     model.build_cnn()
@@ -286,9 +285,7 @@ def minimal_cut(model, image):
     # Compute Maxflow
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
-    print(type(sgm[0][0]))
-    result = np.int_(sgm)
-    return result
+    return np.int_(sgm)
 
 # Do Segmentation using Minimal Graph Cut
 #   Unary terms: Net's output
