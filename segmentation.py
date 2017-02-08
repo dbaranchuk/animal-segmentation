@@ -27,7 +27,7 @@ NUM_FILTERS2 = 32
 NUM_FILTERS3 = 256
 
 PAD = 5
-BATCH_SIZE = 4096
+BATCH_SIZE = 2048#4096
 TRAIN_SIZE = 47
 VAL_SIZE = 5
 NUM_EPOCHS = 20
@@ -277,7 +277,7 @@ def minimal_cut(model, image):
     h_struct = np.array([[0, 0, 0],
                          [0, 0, 0],
                          [0, 1, 0]])
-    graph.add_grid_edges(nodeids, h_weights, h_struct)
+    graph.add_grid_edges(nodeids, h_weights, h_struct, symmetric=True)
 
     # Compute Vertical Weights
     zero_line = np.zeros((image.shape[1], 1))
@@ -288,7 +288,7 @@ def minimal_cut(model, image):
     v_struct = np.array([[0, 0, 0],
                          [0, 0, 1],
                          [0, 0, 0]])
-    graph.add_grid_edges(nodeids, v_weights, v_struct)
+    graph.add_grid_edges(nodeids, v_weights, v_struct, symmetric=True)
 
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
