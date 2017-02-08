@@ -26,7 +26,7 @@ DROPOUT = 0.1
 PAD = 5
 BATCH_SIZE = 2048#4096
 VAL_SIZE = 5
-NUM_EPOCHS = 18
+NUM_EPOCHS = 16
 
 
 # Producing minibatches for training/validation
