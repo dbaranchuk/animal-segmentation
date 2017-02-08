@@ -103,19 +103,17 @@ class TinyNet:
         # Conv1
         l_conv1 = Conv2DLayer(l_in, num_filters=NUM_FILTERS1, filter_size=3,
                               nonlinearity=rectify, W=HeNormal())
-        #l_conv1 = batch_norm(l_conv1)
-        #l_drop1 = spatial_dropout(l_conv1, 0.1)
+        l_drop1 = spatial_dropout(l_conv1, 0.1)
         # Conv2
         l_conv2 = Conv2DLayer(l_conv1, num_filters=NUM_FILTERS2, filter_size=2,
                               stride=2, nonlinearity=rectify, W=HeNormal())
-        #l_conv2 = batch_norm(l_conv2)
-        #l_drop2 = spatial_dropout(l_conv1, 0.2)
+        l_drop2 = spatial_dropout(l_conv1, 0.2)
         # Pool
         l_max = MaxPool2DLayer(l_conv2, pool_size=(2, 2))
         l_max = batch_norm(l_max)
         # FC
         l_dense = DenseLayer(l_max, num_units=NUM_FILTERS3, nonlinearity=rectify)
-        #l_drop3 = spatial_dropout(l_conv1, 0.3)
+        l_drop3 = dropout(l_conv1, 0.3)
         # Softmax Output
         l_out = DenseLayer(l_dense, num_units=2, nonlinearity=softmax)
         self.model = l_out
