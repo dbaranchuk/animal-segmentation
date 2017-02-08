@@ -161,7 +161,7 @@ class TinyNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
-            int(NUM_EPOCHS*0.3): 0.001,
+            int(NUM_EPOCHS*0.4): 0.001,
             NUM_EPOCHS-2: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
