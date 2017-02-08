@@ -28,7 +28,7 @@ VAL_SIZE = 5
 NUM_EPOCHS = 14
 
 
-# Producing minibatches for training/validation
+# Producing minibatches for training/validation 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
     if shuffle:

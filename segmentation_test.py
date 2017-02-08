@@ -6,7 +6,6 @@ from skimage.io import imread, imsave
 from segmentation import train_unary_model, segmentation
 
 TEST_SIZE = 4
-TRAIN_SIZE = 58
 
 def load_data(path):
     if path[-1] != '/':
@@ -51,10 +50,6 @@ train_imgs = data_imgs[TEST_SIZE:]
 train_gt = data_gt[TEST_SIZE:]
 test_imgs = data_imgs[:TEST_SIZE]
 test_gt = data_gt[:TEST_SIZE]
-#train_imgs = data_imgs[:TRAIN_SIZE]
-#train_gt = data_gt[:TRAIN_SIZE]
-#test_imgs = data_imgs[TRAIN_SIZE:]
-#test_gt = data_gt[TRAIN_SIZE:]
 
 unary_model = train_unary_model(train_imgs, train_gt)
 del train_imgs, train_gt
