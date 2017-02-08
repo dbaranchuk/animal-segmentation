@@ -18,9 +18,6 @@ from lasagne.objectives import categorical_crossentropy
 from lasagne.updates import nesterov_momentum
 
 
-# Worker
-MAX_NUM_EPOCHS = 61
-
 # num filters sets for every layers
 NUM_FILTERS1 = 16
 NUM_FILTERS2 = 32
@@ -28,7 +25,7 @@ NUM_FILTERS3 = 256
 
 PAD = 5
 BATCH_SIZE = 2048#4096
-TRAIN_SIZE = 47
+TRAIN_SIZE = 52#47
 VAL_SIZE = 5
 NUM_EPOCHS = 20
 
