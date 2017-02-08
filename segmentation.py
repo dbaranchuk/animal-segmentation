@@ -25,7 +25,6 @@ DROPOUT = 0.1
 
 PAD = 5
 BATCH_SIZE = 2048#4096
-TRAIN_SIZE = 57
 VAL_SIZE = 5
 NUM_EPOCHS = 18
 
@@ -121,15 +120,15 @@ class TinyNet:
 
     #Produce train/val data from input images
     def set_data(self, images, gts):
+        TRAIN_SIZE = len(images) - VAL_SIZE
         X_train, y_train = ([], [])
         X_val, y_val = ([], [])
         for n in range(len(images)):
             X, y = get_data(images[n], gts[n])
-            #if n < TRAIN_SIZE:
-            if n > VAL_SIZE:
+            if n < TRAIN_SIZE:
                 X_train += list(X)
                 y_train += list(y)
-            elif n <= VAL_SIZE:#len(images) - VAL_SIZE:
+            else:
                 X_val += list(X)
                 y_val += list(y)
         self.X_train = np.array(X_train).astype(np.float32)
@@ -202,6 +201,7 @@ class TinyNet:
             print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
             print("  validation accuracy:\t\t{:.2f} %".format(val_acc / val_batches * 100))
 
+    # Compute prediction for an image
     def get_predictions(self, image):
         prediction = get_output(self.model, deterministic=True)
         test_fn = theano.function([self.input_var], prediction)
