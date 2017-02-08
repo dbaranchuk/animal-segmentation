@@ -265,18 +265,22 @@ def minimal_cut(model, image):
 
     # Set Pairwise Terms
     # Compute Horizontal Weights
+    zero_line = np.zeros(image.shape[2])
     h_image_1 = image.copy()[:, 1:, :]
     h_image_2 = image.copy()[:, :-1, :]
     h_weights = compute_weights(h_image_1, h_image_2)
+    h_weights = np.concatenate((h_weights, zero_line), axis=0)
     h_struct = np.array([[0, 0, 0],
                          [0, 0, 0],
                          [0, 1, 0]])
     graph.add_grid_edges(nodeids, h_weights, h_struct)
 
     # Compute Vertical Weights
+    zero_line = np.zeros(image.shape[1])
     v_image_1 = image.copy()[:, :, 1:]
     v_image_2 = image.copy()[:, :, :-1]
     v_weights = compute_weights(v_image_1, v_image_2)
+    v_weights = np.concatenate((v_weights, zero_line), axis=1)
     v_struct = np.array([[0, 0, 0],
                          [0, 0, 1],
                          [0, 0, 0]])
