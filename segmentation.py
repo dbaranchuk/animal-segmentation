@@ -223,16 +223,16 @@ def pad_images(images, pad):
     for image in images:
         h, w, c = image.shape
         new_image = np.zeros((h + 2*pad, w + 2*pad, c))
-        for i in range(image.shape[2]):
-            new_image[...,i] = np.lib.pad(image[...,i], (pad, pad), 'reflect')
+        for i in range(image.shape[0]):
+            new_image[i, ...] = np.lib.pad(image[i, ...], (pad, pad), 'reflect')
         new_images.append(new_image)
     return np.array(new_images)
 
 # Main training function
 def train_unary_model(images, gts):
-    images = pad_images(images, PAD)
     # From TF to TH order
     images = images.transpose(0,3,1,2)
+    images = pad_images(images, PAD)
 
     model = TinyNet()
     model.set_data(images, gts)
@@ -259,14 +259,15 @@ def minimal_cut(model, image):
     nodeids = graph.add_grid_nodes(image.shape[1:])
 
     # Set Unary Terms
-    map = model.get_predictions(image)
+    pad_image = pad_images([image], PAD)[0]
+    map = model.get_predictions(pad_image)
     graph.add_grid_tedges(nodeids, map[0], map[1])
 
     # Set Pairwise Terms
     # Compute Horizontal Weights
     h, w = image.shape
-    h_image_1 = image.copy()[1:, :]
-    h_image_2 = image.copy()[:-1, :]
+    h_image_1 = image.copy()[:, 1:, :]
+    h_image_2 = image.copy()[:, :-1, :]
     h_weights = compute_weights(h_image_1, h_image_2)
     h_struct = np.array([[0, 0, 0],
                          [0, 0, 0],
@@ -274,8 +275,8 @@ def minimal_cut(model, image):
     graph.add_grid_edges(nodeids, h_weights, h_struct)
 
     # Compute Vertical Weights
-    v_image_1 = image.copy()[:, 1:]
-    v_image_2 = image.copy()[:, :-1]
+    v_image_1 = image.copy()[:, :, 1:]
+    v_image_2 = image.copy()[:, :, :-1]
     v_weights = compute_weights(v_image_1, v_image_2)
     v_struct = np.array([[0, 0, 0],
                          [0, 0, 1],
@@ -289,7 +290,6 @@ def minimal_cut(model, image):
     return result
 
 def segmentation(unary_model, images):
-    images = pad_images(images, 5)
     # From TF to TH order
     images = images.transpose(0,3,1,2)
     results = []
