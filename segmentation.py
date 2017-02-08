@@ -286,7 +286,7 @@ def minimal_cut(model, image):
     # Compute Maxflow
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
-    print(type(srm[0][0]))
+    print(type(sgm[0][0]))
     result = np.int_(sgm)
     return result
 
