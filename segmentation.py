@@ -14,9 +14,10 @@ from lasagne.layers import InputLayer, Conv2DLayer, DenseLayer, \
                           dropout, spatial_dropout
 from lasagne.init import HeNormal
 from lasagne.nonlinearities import rectify, softmax
-from lasagne.objectives import categorical_crossentropy
+from lasagne.objectives import binary_crossentropy
 from lasagne.updates import nesterov_momentum
-
+from lasagne.regularization import regularize_layer_params_weighted, l2, l1
+from lasagne.regularization import regularize_layer_params
 
 # Worker
 MAX_NUM_EPOCHS = 61
@@ -141,13 +142,13 @@ class TinyNet:
     # Set a loss expression for training
     def set_train_loss(self):
         prediction = get_output(self.model)
-        loss = categorical_crossentropy(prediction, self.target_var)
+        loss = binary_crossentropy(prediction, self.target_var)
         self.train_loss = loss.mean()
 
     # Set a loss expression for validation/testing (ignoring dropout during the forward pass)
     def set_val_loss(self):
         prediction = get_output(self.model, deterministic=True)
-        loss = categorical_crossentropy(prediction, self.target_var)
+        loss = binary_crossentropy(prediction, self.target_var)
         self.val_loss = loss.mean()
         self.val_acc = T.mean(T.eq(T.argmax(prediction, axis=1), self.target_var),
                                dtype=theano.config.floatX)
