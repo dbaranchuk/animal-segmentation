@@ -221,8 +221,8 @@ class TinyNet:
 def pad_images(images, pad):
     new_images = []
     for image in images:
-        h, w, c = image.shape
-        new_image = np.zeros((h + 2*pad, w + 2*pad, c))
+        c, h, w = image.shape
+        new_image = np.zeros((c, h + 2*pad, w + 2*pad))
         for i in range(image.shape[0]):
             new_image[i, ...] = np.lib.pad(image[i, ...], (pad, pad), 'reflect')
         new_images.append(new_image)
