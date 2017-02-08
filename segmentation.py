@@ -6,7 +6,7 @@ import time
 import theano
 import theano.tensor as T
 from skimage.util import pad
-from matplotlib import pyplot as plt
+from skimage.io import imsave
 
 from lasagne.layers import InputLayer, Conv2DLayer, DenseLayer, \
                           ElemwiseSumLayer, MaxPool2DLayer,     \
@@ -285,9 +285,6 @@ def minimal_cut(model, image):
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
     result = np.int_(np.logical_not(sgm))
-    # Show the result.
-    plt.imshow(result)
-    plt.show()
     print result.shape
     return result
 
