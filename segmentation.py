@@ -276,12 +276,11 @@ def minimal_cut(model, image):
     graph.add_grid_edges(nodeids, h_weights, h_struct)
 
     # Compute Vertical Weights
-    zero_line = np.zeros(image.shape[1])
+    zero_line = np.zeros((image.shape[1], 1))
     v_image_1 = image.copy()[:, :, 1:]
     v_image_2 = image.copy()[:, :, :-1]
     v_weights = compute_weights(v_image_1, v_image_2)
-    print v_weights.shape, zero_line.shape
-    v_weights = np.hstack((v_weights, zero_line.T))
+    v_weights = np.hstack((v_weights, zero_line))
     v_struct = np.array([[0, 0, 0],
                          [0, 0, 1],
                          [0, 0, 0]])
