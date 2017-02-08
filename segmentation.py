@@ -103,12 +103,12 @@ class TinyNet:
         l_drop1 = spatial_dropout(l_conv1, 0.1)
         # Conv2
         l_conv2 = Conv2DLayer(l_drop1, num_filters=NUM_FILTERS2, filter_size=2,
-                              stride=2, nonlinearity=rectify, W=HeNormal())
+                              stride=1, nonlinearity=rectify, W=HeNormal())
         l_drop2 = spatial_dropout(l_conv2, 0.2)
         # Conv2
-        #l_conv3 = Conv2DLayer(l_conv2, num_filters=NUM_FILTERS2, filter_size=2,
+        #l_conv3 = Conv2DLayer(l_drop2, num_filters=NUM_FILTERS2, filter_size=2,
         #                      stride=2, nonlinearity=rectify, W=HeNormal())
-        #l_drop3 = spatial_dropout(l_conv3, 0.25)
+        #l_drop3 = spatial_dropout(l_conv3, 0.2)
         # Pool
         l_max = MaxPool2DLayer(l_drop2, pool_size=(2, 2))
         l_max = batch_norm(l_max)
