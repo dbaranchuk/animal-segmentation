@@ -27,7 +27,7 @@ PAD = 5
 BATCH_SIZE = 2048#4096
 TRAIN_SIZE = 57
 VAL_SIZE = 5
-NUM_EPOCHS = 20
+NUM_EPOCHS = 18
 
 
 # Producing minibatches for training/validation
@@ -158,7 +158,7 @@ class TinyNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
-            int(NUM_EPOCHS*0.3): 0.001,
+            6: 0.001,
             NUM_EPOCHS-2: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
