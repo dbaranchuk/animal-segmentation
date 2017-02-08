@@ -25,8 +25,8 @@ NUM_FILTERS3 = 256
 
 PAD = 5
 BATCH_SIZE = 2048#4096
-TRAIN_SIZE = 52#47
-VAL_SIZE = 5
+TRAIN_SIZE = 56
+VAL_SIZE = 1
 NUM_EPOCHS = 20
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
