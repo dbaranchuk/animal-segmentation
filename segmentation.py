@@ -105,17 +105,21 @@ class TinyNet:
                               nonlinearity=rectify, W=HeNormal())
         l_drop1 = spatial_dropout(l_conv1, 0.125)
         # Conv2
-        l_conv2 = Conv2DLayer(l_conv1, num_filters=NUM_FILTERS2, filter_size=2,
+        l_conv2 = Conv2DLayer(l_drop1, num_filters=NUM_FILTERS2, filter_size=2,
                               stride=2, nonlinearity=rectify, W=HeNormal())
         l_drop2 = spatial_dropout(l_conv1, 0.25)
+        # Conv2
+        #l_conv3 = Conv2DLayer(l_conv2, num_filters=NUM_FILTERS2, filter_size=2,
+        #                      stride=2, nonlinearity=rectify, W=HeNormal())
+        #l_drop3 = spatial_dropout(l_conv3, 0.25)
         # Pool
-        l_max = MaxPool2DLayer(l_conv2, pool_size=(2, 2))
+        l_max = MaxPool2DLayer(l_drop2, pool_size=(2, 2))
         l_max = batch_norm(l_max)
         # FC
         l_dense = DenseLayer(l_max, num_units=NUM_FILTERS3, nonlinearity=rectify)
         l_drop3 = dropout(l_conv1, 0.5)
         # Softmax Output
-        l_out = DenseLayer(l_dense, num_units=2, nonlinearity=softmax)
+        l_out = DenseLayer(l_drop3, num_units=2, nonlinearity=softmax)
         self.model = l_out
 
     #Produce train/val data from input images
