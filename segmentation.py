@@ -231,7 +231,7 @@ def pad_images(images, pad):
 # Main training function
 def train_unary_model(images, gts):
     # From TF to TH order
-    images = images.transpose(0,3,1,2)
+    images = np.array(images).transpose(0,3,1,2)
     images = pad_images(images, PAD)
 
     model = TinyNet()
@@ -291,7 +291,7 @@ def minimal_cut(model, image):
 
 def segmentation(unary_model, images):
     # From TF to TH order
-    images = images.transpose(0,3,1,2)
+    images = np.array(images).transpose(0,3,1,2)
     results = []
     for image in images:
         result = minimal_cut(unary_model, image)
