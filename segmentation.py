@@ -256,7 +256,7 @@ def compute_weights(X, Y):
 # Minimal Graph Cut
 def minimal_cut(model, image):
     graph = maxflow.Graph[float]()
-    nodeids = graph.add_grid_nodes(image.shape)
+    nodeids = graph.add_grid_nodes(image.shape[1:])
 
     # Set Unary Terms
     map = model.get_predictions(image)
