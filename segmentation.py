@@ -30,7 +30,7 @@ PAD = 5
 BATCH_SIZE = 2048
 TRAIN_SIZE = 47
 VAL_SIZE = 5
-NUM_EPOCHS = 25
+NUM_EPOCHS = 20
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
@@ -157,8 +157,8 @@ class TinyNet:
         params = get_all_params(self.model, trainable=True)
         self.lr_schedule = {
             0: 0.01,
-            int(NUM_EPOCHS*0.4): 0.001,
-            #NUM_EPOCHS-5: 0.0001
+            int(NUM_EPOCHS*0.3): 0.001,
+            NUM_EPOCHS-2: 0.0001
         }
         self.lr = theano.shared(np.float32(self.lr_schedule[0]))
         self.updates = nesterov_momentum(self.train_loss, params,
