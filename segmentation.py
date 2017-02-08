@@ -265,7 +265,6 @@ def minimal_cut(model, image):
 
     # Set Pairwise Terms
     # Compute Horizontal Weights
-    h, w = image.shape
     h_image_1 = image.copy()[:, 1:, :]
     h_image_2 = image.copy()[:, :-1, :]
     h_weights = compute_weights(h_image_1, h_image_2)
