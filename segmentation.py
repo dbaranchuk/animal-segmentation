@@ -288,7 +288,7 @@ def minimal_cut(model, image):
     v_struct = np.array([[0, 0, 0],
                          [0, 0, 1],
                          [0, 0, 0]])
-    graph.add_grid_edges(nodeids, v_weights, v_struct, symmetric=True)
+    graph.add_grid_edges(nodeids, v_weights, v_struct)
 
     graph.maxflow()
     sgm = graph.get_grid_segments(nodeids)
