@@ -1,8 +1,8 @@
 # Animal Segmentation
 
-#### Lib: Lasagne (Theano backend), PyMaxFlow
-#### Accuracy: IoU - 83.6%
-#### Time: 7.4 min on GTX 980 Ti & Intel Core i7-4770
+##### Lib: Lasagne (Theano backend), PyMaxFlow
+##### Accuracy: IoU - 83.6%
+##### Time: 7.4 min on GTX 980 Ti & Intel Core i7-4770
 #### Examples:
 ##### Original
 ![Original](http://joxi.net/52aNaZnh4lKLJA.jpg)
