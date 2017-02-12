@@ -46,10 +46,10 @@ if visualisation_needed:
         vis_dir = sys.argv[4]
 
 data_imgs, data_gt = load_data(data_dir)
-train_imgs = data_imgs[TEST_SIZE:]
-train_gt = data_gt[TEST_SIZE:]
-test_imgs = data_imgs[:TEST_SIZE]
-test_gt = data_gt[:TEST_SIZE]
+train_imgs = data_imgs[:len(data_imgs)-TEST_SIZE]
+train_gt = data_gt[:len(data_imgs)-TEST_SIZE]
+test_imgs = data_imgs[len(data_imgs)-TEST_SIZE:]
+test_gt = data_gt[len(data_imgs)-TEST_SIZE:]
 
 unary_model = train_unary_model(train_imgs, train_gt)
 del train_imgs, train_gt
