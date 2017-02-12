@@ -4,8 +4,18 @@
 #### Accuracy: IoU - 83.6%
 #### Example:
 
-![Original](http://joxi.net/V2VRNg5hxB6b12.jpg)
+#### 1)
+##### Original
+![Original](http://joxi.net/52aNaZnh4lKLJA.jpg)
+##### Ground Truth
+![Ground Truth](http://joxi.net/V2VRNg5hxB6w42.jpg)
+##### Result
+![example](http://joxi.net/5mdNO3zhkqEjMA.jpg)
 
-![Ground Truth](http://joxi.net/brRE1pesJBjgdA.jpg)
-
-![example](http://dl2.joxi.net/drive/2016/12/11/0009/2513/641489/89/5bd7cbf2d5.jpg)
+#### 2)
+##### Original
+![Original](http://joxi.net/a2XaqGWt1QXNwA.jpg)
+##### Ground Truth
+![Ground Truth](http://joxi.net/E2pWj9ec9vWKMm.jpg)
+##### Result
+![Result](http://joxi.net/eAO0XNehxvLy4r.jpg)
