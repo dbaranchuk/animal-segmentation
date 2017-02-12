@@ -2,6 +2,7 @@
 
 #### Lib: Lasagne (Theano backend), PyMaxFlow
 #### Accuracy: IoU - 83.6%
+#### Time: 7.4 min on GTX 980 Ti 
 #### Examples:
 ##### Original
 ![Original](http://joxi.net/52aNaZnh4lKLJA.jpg)
